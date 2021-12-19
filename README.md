@@ -1,2 +1,6 @@
 # Dotfiles
 
+## Applications
+
+- zsh
+- xmonad
