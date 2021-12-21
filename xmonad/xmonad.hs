@@ -11,6 +11,7 @@ import XMonad.Layout.SimplestFloat
 import XMonad.Layout.Spiral
 import XMonad.Layout.ThreeColumns
 import XMonad.Layout.CenteredMaster
+import XMonad.Layout.IndependentScreens
 import XMonad.Layout.GridVariants (Grid(Grid))
 import XMonad.Layout.MultiToggle (mkToggle, single, EOT(EOT), (??))
 import XMonad.Layout.MultiToggle.Instances (StdTransformers(NBFULL, MIRROR, NOBORDERS))
@@ -32,6 +33,7 @@ import XMonad.Util.Run
 import XMonad.Util.Loggers
 import XMonad.Actions.CycleWS
 import XMonad.Actions.MouseResize
+import XMonad.Actions.MouseGestures
 import Graphics.X11.ExtraTypes.XF86
 
 import qualified XMonad.StackSet as W
@@ -40,6 +42,7 @@ import qualified Data.Maybe as May
 import qualified Data.Typeable as Type
 import qualified XMonad.Layout.ToggleLayouts as T (toggleLayouts, ToggleLayout(Toggle))
 import qualified XMonad.Layout.MultiToggle as MT (Toggle(..))
+import qualified XMonad.Util.Hacks as Hacks
 
 import System.IO
 import System.Exit
@@ -72,7 +75,7 @@ myKeys conf@(XConfig {modMask = mod4Mask}) = M.fromList $ [
     ((0, xF86XK_AudioLowerVolume), spawn "amixer set Master 5%-"),
     ((0, xF86XK_MonBrightnessUp), spawn "xbacklight -inc 5"),
     ((0, xF86XK_MonBrightnessDown), spawn "xbacklight -dec 5"),
-    ((mod4Mask .|. shiftMask, xK_q), io (exitWith ExitSuccess)),
+    ((mod4Mask .|. shiftMask, xK_q), io exitSuccess),
     ((mod4Mask, xK_q), spawn "if type xmonad; then xmonad --recompile && xmonad --restart; else xmessage xmonad not in \\$PATH: \"$PATH\"; fi")
   ] ++ [
     ((m .|. mod4Mask, k), windows $ f i) | (i, k) <- zip (XMonad.workspaces conf) [xK_1 .. xK_9],
@@ -84,11 +87,11 @@ xmobarEscape = concatMap doubleLts
     --doubleLts '<' = "<<"
     doubleLts x = [x]
 
-myWorkspaces = clickable . (map xmobarEscape) $ ["<fn=3>web</fn>", "<fn=3>dev</fn>", "<fn=3>sys</fn>", "<fn=3>doc</fn>", "<fn=3>chat</fn>", "<fn=3>todo</fn>", "<fn=3>opt</fn>", "<fn=3>media</fn>", "<fn=3>vid</fn>", "0"] -- "<fn=1>\xf121</fn>"                                                                              
+myWorkspaces = clickable . map xmobarEscape $ ["<fn=3>1</fn>", "<fn=3>2</fn>", "<fn=3>3</fn>", "<fn=3>4</fn>", "<fn=3>5</fn>", "<fn=3>6</fn>", "<fn=3>7</fn>", "<fn=3>8</fn>", "<fn=3>9</fn>", "0"] -- "<fn=1>\xf121</fn>"                                                                              
   where                                                                       
     clickable l = 
       [
-        "<action=xdotool key super+" ++ show (n) ++ ">" ++ ws ++ "</action>" | (i,ws) <- zip [1..10] l,                                        
+        "<action=xdotool key super+" ++ show n ++ ">" ++ ws ++ "</action>" | (i,ws) <- zip [1..10] l,                                        
         let n = i 
       ]
 
@@ -96,7 +99,7 @@ myStartupHook = do
   --spawn "killall conky"
   --spawn "killall trayer"
   spawn "lxsession"
-  --spawn "picom --no-vsync"
+  spawn "picom"
   setWMName "LG3D"
   spawn "nitrogen --restore"
   spawn "setxkbmap de"
@@ -113,7 +116,7 @@ mySpacing' i = spacingRaw True (Border i i i i) True (Border i i i i) True
 
 tall = renamed [Replace "tall"]
     $ limitWindows 12
-    $ mySpacing 4
+    $ mySpacing 8
     $ ResizableTall 1 (3/100) (1/2) []
 magnify = renamed [Replace "magnify"]
     $ magnifier
@@ -136,6 +139,10 @@ threeCol = renamed [Replace "threeCol"]
     $ limitWindows 7
     $ mySpacing' 8
     $ ThreeCol 1 (3/100) (1/2)
+threeColMid = renamed [Replace "threeColMid"]
+    $ limitWindows 7
+    $ mySpacing' 8
+    $ ThreeColMid 1 (3/100) (1/2)
 threeRow = renamed [Replace "threeRow"]
     $ limitWindows 7
     $ mySpacing' 8
@@ -155,10 +162,11 @@ tabs = renamed [Replace "tabs"]
 myBaseLayout = screenCornerLayoutHook $ mouseResize $ windowArrange $ T.toggleLayouts floats $ mkToggle (NBFULL ?? NOBORDERS ?? EOT) myDefaultLayout
     where
       myDefaultLayout = tall
+        ||| threeColMid
         ||| magnify
         ||| noBorders tabs
         ||| noBorders monocle
-        ||| floats
+        -- ||| floats
         -- ||| grid
         -- ||| spirals
         -- ||| threeCol
@@ -185,20 +193,22 @@ toggleFloat w = windows
   ( \s ->
       if M.member w (W.floating s)
         then W.sink w s
-        else (W.float w (W.RationalRect (1 / 3) (1 / 4) (1 / 2) (1 / 2)) s)
+        else W.float w (W.RationalRect (1 / 3) (1 / 4) (1 / 2) (1 / 2)) s
   )
 
 myHooks = manageSpawn <+> composeAll 
   [
-    isDialog --> placeHook (fixed (0.5, 0.5)),
+    isDialog --> doFloat <+> placeHook (fixed (0.5, 0.5)),
     isFullscreen --> doFullFloat,
     resource =? "desktop_window" --> doIgnore,
     resource =? "plank" --> hasBorder False,
     resource =? "dunst" --> hasBorder False,
     resource =? "oblogout" --> doFullFloat,
-    resource =? "gxmessage" --> doFloat,
+    resource =? "gxmessage" --> doFloat <+> placeHook (fixed (0.5, 0.5)),
     resource =? "xmessage" --> doFloat,
-    className =? "Xfce4-appfinder" --> (doRectFloat $ W.RationalRect 0 (1/40) (1/2) (1/2)),
+    resource =? "pavucontrol" --> doFloat <+> placeHook (fixed (0.5, 0.5)),
+    title =? "win0" --> doFloat,
+    className =? "Xfce4-appfinder" --> doRectFloat (W.RationalRect 0 (1/50) (1/2) (1/2)),
     --resource =? "xfce4-appfinder" --> (/= focused) --> kill
     title =? "Microsoft Teams" --> doFloat,
     title =? "Microsoft Teams Notification" --> doSideFloat NE -- <+> doF focusDown
@@ -232,11 +242,11 @@ closeOnFocusLostLogHook clsName = do
         tryCast (StateExtension val) = May.fromMaybe initialValue $ Type.cast val
         tryCast _ = NoFocus
 
-myLogHook xmproc = do
+myLogHook xmproc0 xmproc1 xmproc2 = do
   fadeInactiveLogHook 1
   dynamicLogWithPP $ xmobarPP
     {
-      ppOutput = hPutStrLn xmproc,
+      ppOutput = \x -> hPutStrLn xmproc0 x >> hPutStrLn xmproc1 x >> hPutStrLn xmproc2 x,
       ppCurrent = xmobarColor "yellow" "" . wrap "" "",
       ppTitle   = xmobarColor "gray"  "" . shorten 70,
       ppUrgent  = xmobarColor "red" "yellow",
@@ -259,11 +269,15 @@ myEventHook e = do
 mySort = getSortByXineramaRule
 
 main = do
-  xmproc <- spawnPipe "xmobar -d ~/.xmonad/xmobar.hs"
-  xmonad $ docks . setEwmhWorkspaceSort mySort . ewmhFullscreen . ewmh $ def {
+  n <- countScreens
+  xmproc0 <- spawnPipe "xmobar -x 0 $HOME/.xmonad/xmobar.hs"
+  xmproc1 <- spawnPipe "xmobar -x 1 $HOME/.xmonad/xmobar.hs"
+  xmproc2 <- spawnPipe "xmobar -x 2 $HOME/.xmonad/xmobar.hs"
+  xmonad $ docks . setEwmhWorkspaceSort mySort . ewmhFullscreen . ewmh $ Hacks.javaHack (def {
     modMask = mod4Mask,
     terminal = "tilix",
-    borderWidth = 1,
+    borderWidth = 0,
+    focusedBorderColor = "#e94e1b",
 
     workspaces = myWorkspaces,
     keys = myKeys,
@@ -272,7 +286,7 @@ main = do
     layoutHook = smartBorders (lessBorders FocusedOnly (avoidStruts myBaseLayout)),
     manageHook = myHooks,
     handleEventHook = myEventHook,
-    logHook = myLogHook xmproc
+    logHook = myLogHook xmproc0 xmproc1 xmproc2
   } `additionalKeysP` [
       ("M-l", spawn "slock"),
       ("M-r", spawn "rofi -combi-modi window,drun -theme android_notification -font \"hack 10\" -show combi"),
@@ -283,7 +297,7 @@ main = do
       ("M-e", spawn "nemo"),
       ("M-S-e", spawn "gedit"),
       ("M-S-ß", xmessage help)
-    ]
+    ])
 
 help = unlines ["The modifier key is 'Mod'. Default keybindings:",
     "",
