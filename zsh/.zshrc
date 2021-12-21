@@ -5,6 +5,10 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
+if [ $TILIX_ID ] || [ $VTE_VERSION ]; then
+        source /etc/profile.d/vte.sh
+fi
+
 # Lines configured by zsh-newuser-install
 HISTFILE=~/.histfile
 HISTSIZE=10000
@@ -29,6 +33,7 @@ plugins=(git npm docker docker-compose kubectl zsh-syntax-highlighting)
 
 source $ZSH/oh-my-zsh.sh
 export LANG=en_US.UTF-8
+export XCURSOR_THEME=Breeze
 export EDITOR='vim'
 
 source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
