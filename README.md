@@ -4,6 +4,8 @@
 
 - zsh
 - xmonad
+- picom
+- dunst
 - nitrogen
 
 ## Dependencies

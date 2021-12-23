@@ -102,7 +102,8 @@ myStartupHook = do
   spawn "picom"
   setWMName "LG3D"
   spawn "nitrogen --restore"
-  spawn "setxkbmap de"
+  --spawn "xmodmap -layout de -variant dvp -option caps:swapescape -option lv3:ralt_switch "
+  spawn "xmodmap ~/.xmodmap-`uname -n`"
   spawn "plank"
   spawn "dunst"
   --spawn "sleep 2 && trayer --edge top --align right --widthtype request --padding 6 --margin 410 --SetDockType true --SetPartialStrut true --expand true --monitor 0 --transparent true --alpha 0 --tint #424242 --height 24"
@@ -205,6 +206,7 @@ myHooks = manageSpawn <+> composeAll
     resource =? "dunst" --> hasBorder False,
     resource =? "oblogout" --> doFullFloat,
     resource =? "gxmessage" --> doFloat <+> placeHook (fixed (0.5, 0.5)),
+    resource =? "onboard" --> doFloat,
     resource =? "xmessage" --> doFloat,
     resource =? "pavucontrol" --> doFloat <+> placeHook (fixed (0.5, 0.5)),
     title =? "win0" --> doFloat,
@@ -295,6 +297,7 @@ main = do
       --("<Backspace>", spawn "killall plank"),
       ("M-S-f", spawn "firefox"),
       ("M-e", spawn "nemo"),
+      ("M-@", spawn "onboard"),
       ("M-S-e", spawn "gedit"),
       ("M-S-ß", xmessage help)
     ])

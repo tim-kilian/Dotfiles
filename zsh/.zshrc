@@ -40,3 +40,10 @@ source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+export PATH="/home/tkilian/.stack/snapshots/x86_64-linux-tinfo6/d395f12bd61d86081b31c564bd77fda9d97938095ecb09ef8825fed15b345c3f/8.10.7/bin:/home/tkilian/.stack/compiler-tools/x86_64-linux-tinfo6/ghc-8.10.7/bin:/home/tkilian/.stack/programs/x86_64-linux/ghc-tinfo6-8.10.7/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
+export _JAVA_AWT_WM_NONREPARENTING=1
+export QT_QPA_PLATFORMTHEME=qt5ct
+export QT_STYLE_OVERRIDE=kvantum
+

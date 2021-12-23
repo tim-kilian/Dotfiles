@@ -17,7 +17,7 @@ if type -p zsh > /dev/null; then
 fi
 
 ##
-# xmonad 
+# xmonad
 ##
 
 if type -p xmonad > /dev/null; then
@@ -35,7 +35,25 @@ if type -p xmonad > /dev/null; then
 fi
 
 ##
-# picom 
+# qtile
+##
+
+if type -p qtile > /dev/null; then
+    mkdir -p ~/.config/qtile/
+
+    sudo rm -rf ~/.config/qtile/config.py > /dev/null 2>&1
+    sudo rm -rf ~/.config/qtile/autostart.sh > /dev/null 2>&1
+    sudo rm -rf ~/.config/qtile/custom > /dev/null 2>&1
+
+    ln -sf $SCRIPT_DIR/qtile/config.py ~/.config/qtile/config.py
+    ln -sf $SCRIPT_DIR/qtile/autostart.sh ~/.config/qtile/autostart.sh
+    ln -sf $SCRIPT_DIR/qtile/custom ~/.config/qtile/custom
+
+    echo "Configured qtile"
+fi
+
+##
+# picom
 ##
 
 if type -p picom > /dev/null; then
@@ -46,4 +64,18 @@ if type -p picom > /dev/null; then
     ln -sf $SCRIPT_DIR/picom/picom.conf ~/.config/picom/picom.conf
 
     echo "Configured picom"
+fi
+
+##
+# dunst
+##
+
+if type -p dunst > /dev/null; then
+    mkdir -p ~/.config/dunst/
+
+    sudo rm -rf ~/.config/dunst/dunstrc > /dev/null 2>&1
+
+    ln -sf $SCRIPT_DIR/dunst/dunstrc ~/.config/dunst/dunstrc
+
+    echo "Configured dunst"
 fi
