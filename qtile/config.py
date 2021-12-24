@@ -46,7 +46,7 @@ def sortSections(window):
 
 
 def kick_to_next_screen(qtile, direction=1):
-    other_scr_index = (qtile.screens.index(qtile.currentScreen) + direction) % len(
+    other_scr_index = (qtile.screens.index(qtile.current_screen) + direction) % len(
         qtile.screens
     )
     othergroup = None
@@ -55,8 +55,15 @@ def kick_to_next_screen(qtile, direction=1):
             othergroup = group["name"]
             break
     if othergroup:
-        qtile.moveToGroup(othergroup)
+        qtile.move_to_group(othergroup)
 
+def move_to_next_group(qtile):
+    # qtile.move_to_group(othergroup)
+    pass
+
+def move_to_next_group(qtile):
+    # qtile.move_to_group(othergroup)
+    pass
 
 keys = [
     Key([mod], "Left", lazy.layout.left()),
@@ -73,10 +80,12 @@ keys = [
     Key([mod, "control"], "Up", lazy.layout.grow_up()),
     Key([mod, "control"], "h", lazy.layout.grow()),
     Key([mod, "control"], "j", lazy.layout.shrink()),
-    Key([mod], "XF86Back", lazy.screen.prev_group()),
-    Key([mod], "XF86Forward", lazy.screen.next_group()),
-    Key([mod], "o", lazy.function(kick_to_next_screen)),
-    Key([mod, "shift"], "o", lazy.function(kick_to_next_screen, -1)),
+    Key([mod], "Next", lazy.screen.prev_group()),
+    Key([mod], "Prior", lazy.screen.next_group()),
+    Key([mod, "shift"], "Next", lazy.function(move_to_prev_group)),
+    Key([mod, "shift"], "Prior", lazy.function(move_to_next_group)),
+    Key([mod], "k", lazy.function(kick_to_next_screen)),
+    Key([mod, "shift"], "k", lazy.function(kick_to_next_screen, -1)),
     Key(["mod1"], "Tab", lazy.layout.next()),
     Key(["mod1", "shift"], "Tab", lazy.layout.previous()),
     Key([mod], "Tab", lazy.next_layout()),
