@@ -45,6 +45,19 @@ def sortSections(window):
         return "Other"
 
 
+def kick_to_next_screen(qtile, direction=1):
+    other_scr_index = (qtile.screens.index(qtile.currentScreen) + direction) % len(
+        qtile.screens
+    )
+    othergroup = None
+    for group in qtile.cmd_groups().values():
+        if group["screen"] == other_scr_index:
+            othergroup = group["name"]
+            break
+    if othergroup:
+        qtile.moveToGroup(othergroup)
+
+
 keys = [
     Key([mod], "Left", lazy.layout.left()),
     Key([mod], "Right", lazy.layout.right()),
@@ -60,6 +73,10 @@ keys = [
     Key([mod, "control"], "Up", lazy.layout.grow_up()),
     Key([mod, "control"], "h", lazy.layout.grow()),
     Key([mod, "control"], "j", lazy.layout.shrink()),
+    Key([mod], "XF86Back", lazy.screen.prev_group()),
+    Key([mod], "XF86Forward", lazy.screen.next_group()),
+    Key([mod], "o", lazy.function(kick_to_next_screen)),
+    Key([mod, "shift"], "o", lazy.function(kick_to_next_screen, -1)),
     Key(["mod1"], "Tab", lazy.layout.next()),
     Key(["mod1", "shift"], "Tab", lazy.layout.previous()),
     Key([mod], "Tab", lazy.next_layout()),
@@ -111,6 +128,7 @@ keys = [
     Key([mod], "c", lazy.group["scratchpad"].dropdown_toggle("term")),
     Key([mod], "h", lazy.group["scratchpad"].dropdown_toggle("htop")),
     Key([mod], "g", lazy.group["scratchpad"].dropdown_toggle("apps")),
+    Key([mod], "a", lazy.group["scratchpad"].dropdown_toggle("pavu")),
 ]
 
 groups = [
@@ -120,18 +138,19 @@ groups = [
             DropDown("term", "alacritty", opacity=0.8),
             DropDown("htop", "alacritty -e htop", opacity=0.8),
             DropDown("apps", "xfce4-appfinder --disable-server", opacity=0.8),
+            DropDown("pavu", "pavucontrol", opacity=0.8),
         ],
     ),
     Group(
         "1",
-        label=nf.icons["mdi_web"] + "¹",
+        label=nf.icons["fa_firefox"] + "¹",
         matches=[
             Match(wm_class="firefox"),
         ],
     ),
     Group(
         "2",
-        label=nf.icons["dev_code_badge"] + "²",
+        label=nf.icons["mdi_code_array"] + "²",
         layout="tab",
         matches=[
             Match(wm_class="code-oss"),
@@ -140,7 +159,7 @@ groups = [
     ),
     Group(
         "3",
-        label=nf.icons["mdi_briefcase"] + "³",
+        label=nf.icons["mdi_comment_text"] + "³",
         matches=[Match(func=lambda w: "microsoft teams" in w.get_wm_class())],
     ),
     Group("4", label=nf.icons["dev_terminal"] + "⁴"),
@@ -272,13 +291,63 @@ screens = [
                 ),
                 widget.Spacer(),
                 widget.CheckUpdates(),
-                widget.CPUGraph(),
-                widget.CPU(),
-                widget.MemoryGraph(),
-                widget.Memory(),
-                widget.PulseVolume(),
-                widget.BatteryIcon(),
-                widget.Battery(),
+                widget.CPU(
+                    format=nf.icons["mdi_chip"] + " {load_percent}%",
+                    font="Hack Nerd Font",
+                    foreground="#EC9A29",
+                    fill_color="92140C.3",
+                    mouse_callbacks={
+                        "Button1": lambda: qtile.cmd_simulate_keypress([mod], "h")
+                    },
+                ),
+                widget.CPUGraph(
+                    samples=60,
+                    border_width=0,
+                    graph_color="#EC9A29",
+                    mouse_callbacks={
+                        "Button1": lambda: qtile.cmd_simulate_keypress([mod], "h")
+                    },
+                ),
+                widget.Memory(
+                    format=nf.icons["mdi_memory"] + " {MemPercent}%",
+                    font="Hack Nerd Font",
+                    fontsize=14,
+                    foreground="#0088cc",
+                    mouse_callbacks={
+                        "Button1": lambda: qtile.cmd_simulate_keypress([mod], "h")
+                    },
+                ),
+                widget.MemoryGraph(
+                    samples=60,
+                    border_width=0,
+                    graph_color="#0088cc",
+                    mouse_callbacks={
+                        "Button1": lambda: qtile.cmd_simulate_keypress([mod], "h")
+                    },
+                ),
+                widget.PulseVolume(
+                    emoji=True,
+                    foreground="#AC80A0",
+                    font="Hack Nerd Font",
+                    mouse_callbacks={
+                        "Button1": lambda: qtile.cmd_simulate_keypress([mod], "a")
+                    },
+                ),
+                widget.Battery(
+                    format="{char} {percent:2.0%}",
+                    font="Hack Nerd Font",
+                    show_short_text=False,
+                    full_char=nf.icons["mdi_battery"],
+                    charge_char=nf.icons["mdi_battery_charging"],
+                    discharge_char=nf.icons["mdi_battery_50"],
+                    unknown_char=nf.icons["mdi_battery_unknown"],
+                    empty_char=nf.icons["mdi_battery_outline"],
+                    foreground="#758E4F",
+                    low_percentage=0.15,
+                    low_foreground="#92140C",
+                    notify_below=15,
+                    update_interval=30,
+                ),
                 widget.Systray(icon_size=22),
                 widget.TextBox(
                     nf.icons["iec_power"],
@@ -378,6 +447,12 @@ auto_minimize = True
 @hook.subscribe.startup_once
 def start_once():
     subprocess.call([os.path.expanduser("~") + "/.config/qtile/autostart.sh"])
+
+
+@hook.subscribe.screen_change
+def screen_change(qtile, ev):
+    # TODO
+    pass
 
 
 @hook.subscribe.client_managed
