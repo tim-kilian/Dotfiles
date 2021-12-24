@@ -57,13 +57,16 @@ def kick_to_next_screen(qtile, direction=1):
     if othergroup:
         qtile.move_to_group(othergroup)
 
-def move_to_next_group(qtile):
+
+def move_to_prev_group(qtile):
     # qtile.move_to_group(othergroup)
     pass
+
 
 def move_to_next_group(qtile):
     # qtile.move_to_group(othergroup)
     pass
+
 
 keys = [
     Key([mod], "Left", lazy.layout.left()),
@@ -211,7 +214,7 @@ layouts = [
     layout.MonadTall(
         name="tall",
         border_width=0,
-        margin=8,
+        margin=20,
         margin_on_single=0,
         align=1,
         ratio=0.6,
@@ -335,7 +338,7 @@ screens = [
                     },
                 ),
                 widget.PulseVolume(
-                    emoji=True,
+                    # emoji=True,
                     foreground="#AC80A0",
                     font="Hack Nerd Font",
                     mouse_callbacks={
