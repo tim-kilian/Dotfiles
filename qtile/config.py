@@ -96,6 +96,18 @@ keys = [
     Key([], "XF86AudioMute", lazy.spawn("amixer sset Master toggle")),
     Key([], "XF86MonBrightnessUp", lazy.spawn("xbacklight -inc 10")),
     Key([], "XF86MonBrightnessDown", lazy.spawn("xbacklight -dec 10")),
+    Key(
+        [],
+        "Print",
+        lazy.spawn("flameshot gui -p " + os.path.expanduser("~/Pictures/Screenshots/")),
+    ),
+    Key(
+        [mod],
+        "Print",
+        lazy.spawn(
+            "flameshot screen -p " + os.path.expanduser("~/Pictures/Screenshots/")
+        ),
+    ),
     Key([mod], "c", lazy.group["scratchpad"].dropdown_toggle("term")),
     Key([mod], "h", lazy.group["scratchpad"].dropdown_toggle("htop")),
     Key([mod], "g", lazy.group["scratchpad"].dropdown_toggle("apps")),
