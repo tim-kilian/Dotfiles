@@ -79,3 +79,18 @@ if type -p dunst > /dev/null; then
 
     echo "Configured dunst"
 fi
+
+
+##
+# oblogout
+##
+
+if type -p oblogout > /dev/null; then
+    sudo rm -rf /etc/oblogout.conf > /dev/null 2>&1
+    sudo rm -rf /usr/share/themes/solarized-squares64 > /dev/null 2>&1
+
+    sudo ln -sf $SCRIPT_DIR/oblogout/oblogout.conf /etc/oblogout.conf
+    sudo ln -sf $SCRIPT_DIR/oblogout/solarized-squares64 /usr/share/themes/solarized-squares64
+
+    echo "Configured oblogout"
+fi

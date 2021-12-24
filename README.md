@@ -7,6 +7,7 @@
 - picom
 - dunst
 - nitrogen
+- oblogout
 
 ## Dependencies
 
