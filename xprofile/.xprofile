@@ -1,0 +1,9 @@
+export LANG=en_US.UTF-8
+export XCURSOR_THEME=Breeze
+export EDITOR='vim'
+
+export PATH="$HOME/.local/bin:$PATH"
+
+export _JAVA_AWT_WM_NONREPARENTING=1
+export QT_QPA_PLATFORMTHEME=qt5ct
+export QT_STYLE_OVERRIDE=kvantum

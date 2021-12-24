@@ -3,6 +3,21 @@
 SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
 
 ##
+# xprofile
+##
+
+rm ~/.xprofile
+ln -sf $SCRIPT_DIR/xprofile/.xprofile ~/.xprofile
+echo "Configured xprofile"
+
+##
+# icons
+##
+
+cp -r $SCRIPT_DIR/icons/* ~/.icons/
+echo "Configured icons"
+
+##
 # zsh
 ##
 

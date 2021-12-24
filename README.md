@@ -9,6 +9,9 @@
 - nitrogen
 - oblogout
 
+- qt5ct
+- kvantum
+
 ## Dependencies
 
 - zsh: 
