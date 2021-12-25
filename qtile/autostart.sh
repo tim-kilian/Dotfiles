@@ -3,3 +3,4 @@
 lxsession &
 picom &
 nitrogen --restore &
+nm-applet &

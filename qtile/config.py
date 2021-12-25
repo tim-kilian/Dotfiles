@@ -115,7 +115,7 @@ keys = [
             + " -show combi"
         ),
     ),
-    Key([mod], "p", lazy.spawn('dmenu_run -fn "xft:Roboto:size=13"')),
+    Key([mod], "p", lazy.spawn('dmenu_run -fn "xft:Roboto:size=15"')),
     Key([mod], "l", lazy.spawn("slock")),
     Key([mod], "n", lazy.spawn("bijiben")),
     Key([mod], "e", lazy.spawn("nemo")),
@@ -469,13 +469,13 @@ def screen_change(qtile, ev):
 
 @hook.subscribe.client_managed
 def client_managed(window):
-    if qtile.current_layout.cmd_sort_windows:
+    if hasattr(qtile.current_layout, 'cmd_sort_windows'):
         qtile.current_layout.cmd_sort_windows(sortSections)
 
 
 @hook.subscribe.focus_change
 def focus_change():
-    if qtile.current_layout.cmd_sort_windows:
+    if hasattr(qtile.current_layout, 'cmd_sort_windows'):
         qtile.current_layout.cmd_sort_windows(sortSections)
 
 
