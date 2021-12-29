@@ -1,6 +1,6 @@
 from typing import List  # noqa: F401
 
-from libqtile import bar, layout, widget
+from libqtile import qtile, bar, layout, widget
 from libqtile.config import Click, Drag, Group, Key, Match, Screen
 from libqtile.lazy import lazy
 from libqtile.utils import guess_terminal
@@ -85,6 +85,7 @@ for i in groups:
     )
 
 layouts = [
+    layout.TreeTab(),
     layout.Columns(border_focus_stack=["#d75f5f", "#8f3d3d"], border_width=4),
     layout.Max(),
     # Try more layouts by unleashing below layouts.
@@ -95,7 +96,6 @@ layouts = [
     # layout.MonadWide(),
     # layout.RatioTile(),
     # layout.Tile(),
-    # layout.TreeTab(),
     # layout.VerticalTile(),
     # layout.Zoomy(),
 ]
@@ -121,7 +121,15 @@ screens = [
                     },
                     name_transform=lambda name: name.upper(),
                 ),
-                widget.TextBox("default config", name="default"),
+                widget.TextBox(
+                    "default config",
+                    name="default",
+                    mouse_callbacks={
+                        "Button1": lambda: qtile.cmd_simulate_keypress(
+                            [mod, "control"], "r"
+                        )
+                    },
+                ),
                 widget.TextBox("Press &lt;M-r&gt; to spawn", foreground="#d75f5f"),
                 widget.Systray(),
                 widget.Clock(format="%Y-%m-%d %a %I:%M %p"),

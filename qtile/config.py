@@ -68,6 +68,12 @@ def move_to_next_group(qtile):
     pass
 
 
+def parse_title(text):
+    for chunk in [" - Code - OSS", " — Mozilla Firefox"]:
+        text = text.replace(chunk, "")
+    return text
+
+
 keys = [
     Key([mod], "Left", lazy.layout.left()),
     Key([mod], "Right", lazy.layout.right()),
@@ -115,7 +121,7 @@ keys = [
             + " -show combi"
         ),
     ),
-    Key([mod], "p", lazy.spawn('dmenu_run -fn "xft:Roboto:size=15"')),
+    Key([mod], "p", lazy.spawn('dmenu_run -fn "xft:Roboto:size=14" -h 24')),
     Key([mod], "l", lazy.spawn("slock")),
     Key([mod], "n", lazy.spawn("bijiben")),
     Key([mod], "e", lazy.spawn("nemo")),
@@ -140,7 +146,6 @@ keys = [
     Key([mod], "c", lazy.group["scratchpad"].dropdown_toggle("term")),
     Key([mod], "h", lazy.group["scratchpad"].dropdown_toggle("htop")),
     Key([mod], "g", lazy.group["scratchpad"].dropdown_toggle("apps")),
-    Key([mod], "a", lazy.group["scratchpad"].dropdown_toggle("pavu")),
 ]
 
 groups = [
@@ -150,7 +155,6 @@ groups = [
             DropDown("term", "alacritty", opacity=0.8),
             DropDown("htop", "alacritty -e htop", opacity=0.8),
             DropDown("apps", "xfce4-appfinder --disable-server", opacity=0.8),
-            DropDown("pavu", "pavucontrol", opacity=0.8),
         ],
     ),
     Group(
@@ -163,7 +167,7 @@ groups = [
     Group(
         "2",
         label=nf.icons["mdi_code_array"] + "²",
-        layout="tab",
+        layout="treetab",
         matches=[
             Match(wm_class="code-oss"),
             Match(wm_class="jetbrains-idea"),
@@ -180,15 +184,17 @@ groups = [
     Group(
         "7",
         label=nf.icons["fa_music"] + "⁷",
-        matches=[Match(func=lambda w: "YouTube Music" in w.get_name())],
+        matches=[
+            Match(func=lambda w: "youtubemusic-nativefier-040164" in w.get_wm_class())
+        ],
     ),
     Group("8", label=nf.icons["mdi_xbox_controller"] + "⁸"),
+    Group("9", label=nf.icons["fa_gear"] + "⁹"),
     Group(
-        "9",
-        label=nf.icons["fa_home"] + "⁹",
+        "0",
+        label=nf.icons["fa_home"] + "⁰",
         layout="float",
     ),
-    Group("0", label=nf.icons["fa_gear"] + "⁰"),
 ]
 # Cool icons: fa_wechat, mdi_email mdi_cloud fae_galery mdi_camcorder_box fa_rocket fa_heart
 
@@ -212,29 +218,35 @@ for i in groups:
 
 layouts = [
     layout.MonadTall(
-        name="tall",
+        # name="tall",
         border_width=0,
-        margin=20,
+        margin=16,
         margin_on_single=0,
         align=1,
         ratio=0.6,
     ),
     mytree.TreeTab(
+        # name="tab",
         place_right=True,
         panel_width=300,
         bg_color="#24262b",
         inactive_bg="#41434a",
         active_bg="#215578",
         section_fg="#aaaaaa",
-        name="tab",
         font="Roboto",
         sections=["Default"],
         padding_y=5,
         section_top=4,
         section_left=16,
     ),
-    layout.Max(name="max"),
-    layout.Floating(name="float", border_width=0, border_focus="#333333"),
+    layout.Max(
+        # name="max"
+    ),
+    layout.Floating(
+        # name="float",
+        border_width=0,
+        border_focus="#333333",
+    ),
     # Try more layouts by unleashing below layouts.
     # layout.Columns(
     #     num_columns=3, border_width=0, name="Col", margin=8, margin_on_single=0
@@ -272,34 +284,28 @@ screens = [
                     },
                     padding=14,
                 ),
+                widget.CurrentLayoutIcon(
+                    custom_icon_paths=[
+                        os.path.expanduser("~") + "/.config/qtile/custom/icons",
+                        os.path.expanduser("~") + "/icons",
+                    ],
+                    scale=0.7,
+                ),
                 widget.GroupBox(font="Hack Nerd Font", fontsize=16, padding=3),
-                widget.CurrentLayout(),
-                # widget.CurrentLayoutIcon(
-                #     custom_icon_paths=[
-                #         os.path.expanduser("~") + "/.config/qtile/custom/icons"
-                #     ],
-                #     scale=0.7,
-                # ),
+                # widget.CurrentLayout(),
                 widget.WindowCount(),
-                widget.Prompt(),
+                widget.TaskList(
+                    fontsize=13,
+                    margin_y=2,
+                    padding_y=2,
+                    unfocused_border="#444444",
+                    parse_text=parse_title,
+                ),
                 widget.Chord(
                     chords_colors={
                         "launch": ("#ff0000", "#ffffff"),
                     },
                     name_transform=lambda name: name.upper(),
-                ),
-                widget.WindowName(),
-                widget.Chord(
-                    chords_colors={
-                        "launch": ("#ff0000", "#ffffff"),
-                    },
-                    name_transform=lambda name: name.upper(),
-                ),
-                widget.Clock(
-                    format="%H:%M    %d.%m.%Y",
-                    mouse_callbacks={
-                        "Button1": lambda: qtile.cmd_spawn("gnome-calendar")
-                    },
                 ),
                 widget.Spacer(),
                 widget.CheckUpdates(),
@@ -307,7 +313,6 @@ screens = [
                     format=nf.icons["mdi_chip"] + " {load_percent}%",
                     font="Hack Nerd Font",
                     foreground="#EC9A29",
-                    fill_color="92140C.3",
                     mouse_callbacks={
                         "Button1": lambda: qtile.cmd_simulate_keypress([mod], "h")
                     },
@@ -316,6 +321,7 @@ screens = [
                     samples=60,
                     border_width=0,
                     graph_color="#EC9A29",
+                    fill_color="92140C.3",
                     mouse_callbacks={
                         "Button1": lambda: qtile.cmd_simulate_keypress([mod], "h")
                     },
@@ -337,30 +343,13 @@ screens = [
                         "Button1": lambda: qtile.cmd_simulate_keypress([mod], "h")
                     },
                 ),
-                widget.PulseVolume(
-                    # emoji=True,
-                    foreground="#AC80A0",
-                    font="Hack Nerd Font",
+                widget.Systray(icon_size=22),
+                widget.Clock(
+                    format="   %H:%M    %d.%m.%Y",
                     mouse_callbacks={
-                        "Button1": lambda: qtile.cmd_simulate_keypress([mod], "a")
+                        "Button1": lambda: qtile.cmd_spawn("gnome-calendar")
                     },
                 ),
-                widget.Battery(
-                    format="{char} {percent:2.0%}",
-                    font="Hack Nerd Font",
-                    show_short_text=False,
-                    full_char=nf.icons["mdi_battery"],
-                    charge_char=nf.icons["mdi_battery_charging"],
-                    discharge_char=nf.icons["mdi_battery_50"],
-                    unknown_char=nf.icons["mdi_battery_unknown"],
-                    empty_char=nf.icons["mdi_battery_outline"],
-                    foreground="#758E4F",
-                    low_percentage=0.15,
-                    low_foreground="#92140C",
-                    notify_below=15,
-                    update_interval=30,
-                ),
-                widget.Systray(icon_size=22),
                 widget.TextBox(
                     nf.icons["iec_power"],
                     font="Hack Nerd Font",
@@ -388,13 +377,79 @@ screens = [
                     padding=14,
                 ),
                 widget.GroupBox(font="Hack Nerd Font", fontsize=16, padding=3),
-                widget.CurrentLayout(),
+                # widget.CurrentLayout(),
+                widget.CurrentLayoutIcon(
+                    custom_icon_paths=[
+                        os.path.expanduser("~") + "/.config/qtile/custom/icons",
+                        os.path.expanduser("~") + "/icons",
+                    ],
+                    scale=0.7,
+                ),
                 widget.WindowCount(),
-                widget.Prompt(),
-                widget.WindowTabs(),
-                widget.Clock(format="%H:%M"),
-                widget.Clock(format="%d.%m.%Y"),
+                widget.TaskList(
+                    fontsize=13,
+                    margin_y=2,
+                    padding_y=2,
+                    unfocused_border="#444444",
+                    parse_text=parse_title,
+                ),
                 widget.Spacer(),
+                widget.Clock(
+                    format="   %H:%M    %d.%m.%Y",
+                    mouse_callbacks={
+                        "Button1": lambda: qtile.cmd_spawn("gnome-calendar")
+                    },
+                ),
+                widget.TextBox(
+                    nf.icons["iec_power"],
+                    font="Hack Nerd Font",
+                    fontsize=16,
+                    mouse_callbacks={"Button1": lambda: qtile.cmd_spawn("oblogout")},
+                ),
+            ],
+            24,
+            background="#34363d",
+            border_color=["#0088cc", "#0088cc", "#0088cc", "#0088cc"],
+            border_width=[0, 0, 2, 0],
+        ),
+    ),
+    Screen(
+        top=bar.Bar(
+            [
+                widget.TextBox(
+                    nf.icons["linux_archlinux"],
+                    font="Hack Nerd Font",
+                    fontsize=16,
+                    foreground="#1793d1",
+                    mouse_callbacks={
+                        "Button1": lambda: qtile.cmd_simulate_keypress([mod], "g")
+                    },
+                    padding=14,
+                ),
+                widget.GroupBox(font="Hack Nerd Font", fontsize=16, padding=3),
+                # widget.CurrentLayout(),
+                widget.CurrentLayoutIcon(
+                    custom_icon_paths=[
+                        os.path.expanduser("~") + "/.config/qtile/custom/icons",
+                        os.path.expanduser("~") + "/icons",
+                    ],
+                    scale=0.7,
+                ),
+                widget.WindowCount(),
+                widget.TaskList(
+                    fontsize=13,
+                    margin_y=2,
+                    padding_y=2,
+                    unfocused_border="#444444",
+                    parse_text=parse_title,
+                ),
+                widget.Spacer(),
+                widget.Clock(
+                    format="   %H:%M    %d.%m.%Y",
+                    mouse_callbacks={
+                        "Button1": lambda: qtile.cmd_spawn("gnome-calendar")
+                    },
+                ),
                 widget.TextBox(
                     nf.icons["iec_power"],
                     font="Hack Nerd Font",
@@ -443,6 +498,7 @@ floating_layout = layout.Floating(
         Match(wm_class="gnome-calculator"),
         Match(wm_class="bijiben"),
         Match(wm_class="oblogout"),
+        Match(wm_class="pavucontrol"),
     ],
     border_width=0,
     border_focus="#333333",
@@ -469,13 +525,13 @@ def screen_change(qtile, ev):
 
 @hook.subscribe.client_managed
 def client_managed(window):
-    if hasattr(qtile.current_layout, 'cmd_sort_windows'):
+    if hasattr(qtile.current_layout, "cmd_sort_windows"):
         qtile.current_layout.cmd_sort_windows(sortSections)
 
 
 @hook.subscribe.focus_change
 def focus_change():
-    if hasattr(qtile.current_layout, 'cmd_sort_windows'):
+    if hasattr(qtile.current_layout, "cmd_sort_windows"):
         qtile.current_layout.cmd_sort_windows(sortSections)
 
 

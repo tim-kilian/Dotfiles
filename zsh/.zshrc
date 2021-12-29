@@ -6,7 +6,7 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
 fi
 
 if [ $TILIX_ID ] || [ $VTE_VERSION ]; then
-        source /etc/profile.d/vte.sh
+  source /etc/profile.d/vte.sh
 fi
 
 # Lines configured by zsh-newuser-install
@@ -37,6 +37,8 @@ export XCURSOR_THEME=Breeze
 export EDITOR='vim'
 
 source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
+
+alias reds="redshift-gtk -l $(curl -s https://location.services.mozilla.com/v1/geolocate\?key=geoclue | jq '.location.lat, .location.lng' | tr '\n' ':' | sed 's/:$//')"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
