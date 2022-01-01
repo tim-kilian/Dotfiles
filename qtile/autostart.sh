@@ -5,9 +5,8 @@ lxsession &
 nitrogen --restore &
 nm-applet &
 reds &
-xinput set-prop 13 313 1 &
-xinput set-prop 13 305 1 &
-umonitor --listen --daemonize &
+xinput set-prop "SynPS/2 Synaptics TouchPad" "libinput Tapping Enabled" 1 &
+xinput set-prop "SynPS/2 Synaptics TouchPad" "libinput Natural Scrolling Enabled" 1 &
 volctl &
 cbatticon &
 onboard &

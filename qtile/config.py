@@ -4,7 +4,7 @@ from libqtile import qtile, bar, layout, widget, hook
 from libqtile.config import Click, Drag, Group, ScratchPad, DropDown, Key, Match, Screen
 from libqtile.lazy import lazy
 from libqtile.utils import guess_terminal
-from custom import mytree
+from custom import mytree, three, threecol
 import nerdfonts as nf
 import os, subprocess
 
@@ -39,6 +39,12 @@ def toggle_focus_floating():
 
 
 def sortSections(window):
+    if window is None:
+        return "Other"
+    if "zegar" in window.name:
+        return "zegar"
+    if "qtile" in window.name:
+        return "qtile"
     if "edel" in window.name:
         return "Edel-Optics"
     else:
@@ -176,20 +182,38 @@ groups = [
     Group(
         "3",
         label=nf.icons["mdi_comment_text"] + "³",
+        layout="max",
         matches=[Match(func=lambda w: "microsoft teams" in w.get_wm_class())],
     ),
-    Group("4", label=nf.icons["dev_terminal"] + "⁴"),
-    Group("5", label=nf.icons["mdi_file_document"] + "⁵"),
-    Group("6", label=nf.icons["mdi_image"] + "⁶"),
+    Group(
+        "4",
+        label=nf.icons["dev_terminal"] + "⁴",
+        layout="monadtall",
+    ),
+    Group(
+        "5",
+        label=nf.icons["mdi_file_document"] + "⁵",
+        layout="monadtall",
+    ),
+    Group(
+        "6",
+        label=nf.icons["mdi_image"] + "⁶",
+        layout="monadtall",
+    ),
     Group(
         "7",
         label=nf.icons["fa_music"] + "⁷",
+        layout="max",
         matches=[
             Match(func=lambda w: "youtubemusic-nativefier-040164" in w.get_wm_class())
         ],
     ),
-    Group("8", label=nf.icons["mdi_xbox_controller"] + "⁸"),
-    Group("9", label=nf.icons["fa_gear"] + "⁹"),
+    Group("8", label=nf.icons["mdi_xbox_controller"] + "⁸", layout="max"),
+    Group(
+        "9",
+        label=nf.icons["fa_gear"] + "⁹",
+        layout="monadtall",
+    ),
     Group(
         "0",
         label=nf.icons["fa_home"] + "⁰",
@@ -217,16 +241,13 @@ for i in groups:
     )
 
 layouts = [
-    layout.MonadTall(
-        # name="tall",
+    three.ThreeCol(border_width=0, margin=16, single_margin=0, ratio=0.5),
+    layout.Max(),
+    layout.Floating(
         border_width=0,
-        margin=16,
-        margin_on_single=0,
-        align=1,
-        ratio=0.6,
+        border_focus="#333333",
     ),
     mytree.TreeTab(
-        # name="tab",
         place_right=True,
         panel_width=300,
         bg_color="#24262b",
@@ -239,18 +260,17 @@ layouts = [
         section_top=4,
         section_left=16,
     ),
-    layout.Max(
-        # name="max"
+    layout.Columns(
+        num_columns=3, border_width=0, margin=16, margin_on_single=0
     ),
-    layout.Floating(
-        # name="float",
+    layout.MonadTall(
         border_width=0,
-        border_focus="#333333",
+        margin=16,
+        single_margin=0,
+        # align=1,
+        ratio=0.6,
     ),
     # Try more layouts by unleashing below layouts.
-    # layout.Columns(
-    #     num_columns=3, border_width=0, name="Col", margin=8, margin_on_single=0
-    # ),
     # layout.Stack(num_stacks=2),
     # layout.Bsp(),
     # layout.Matrix(),
@@ -514,13 +534,13 @@ auto_minimize = True
 
 @hook.subscribe.startup_once
 def start_once():
+    qtile.move_to_group("0")
     subprocess.call([os.path.expanduser("~") + "/.config/qtile/autostart.sh"])
 
 
 @hook.subscribe.screen_change
 def screen_change(qtile, ev):
-    # TODO
-    pass
+    subprocess.call(["nitrogen", "--restore"])
 
 
 @hook.subscribe.client_managed
