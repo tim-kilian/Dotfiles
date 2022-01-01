@@ -1,7 +1,8 @@
 #!/bin/env bash
 
 lxsession &
-/home/tkilian/Projects/picom-dccsillag/build/src/picom &
+# /home/tkilian/Projects/picom-dccsillag/build/src/picom &
+picom &
 nitrogen --restore &
 nm-applet &
 reds &
