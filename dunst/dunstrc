@@ -196,7 +196,8 @@
     max_icon_size = 64
 
     # Paths to default icons.
-    icon_path = /usr/share/icons/gnome/16x16/status/:/usr/share/icons/gnome/16x16/devices/
+    #icon_path = /usr/share/icons/gnome/16x16/status/:/usr/share/icons/gnome/16x16/devices/
+    icon_path = /usr/share/icons/Win11-dark/status/16/:/usr/share/Win11-dark/devices/16/
 
     ### History ###
 
@@ -274,9 +275,9 @@
     # * context_all: Open context menu for all notifications.
     # These values can be strung together for each mouse event, and
     # will be executed in sequence.
-    mouse_left_click = close_current
-    mouse_middle_click = do_action, close_current
-    mouse_right_click = close_all
+    mouse_left_click = do_action, close_current
+    mouse_middle_click = close_all
+    mouse_right_click = close_current
 
 # Experimental features that may or may not work correctly. Do not expect them
 # to have a consistent behaviour across releases.
@@ -301,7 +302,7 @@
 [urgency_normal]
     background = "#282a36"
     foreground = "#bd93f9"
-    timeout = 10
+    timeout = 15
     # Icon for notifications with normal urgency, uncomment to enable
     #new_icon = /path/to/icon
 
