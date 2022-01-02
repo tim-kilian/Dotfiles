@@ -183,7 +183,9 @@ groups = [
         "3",
         label=nf.icons["mdi_comment_text"] + "³",
         layout="max",
-        matches=[Match(func=lambda w: "microsoft teams" in w.get_wm_class())],
+        matches=[
+            Match(wm_class="Microsoft Teams - Preview"),
+        ],
     ),
     Group(
         "4",
@@ -260,9 +262,7 @@ layouts = [
         section_top=4,
         section_left=16,
     ),
-    layout.Columns(
-        num_columns=3, border_width=0, margin=16, margin_on_single=0
-    ),
+    layout.Columns(num_columns=3, border_width=0, margin=16, margin_on_single=0),
     layout.MonadTall(
         border_width=0,
         margin=16,
