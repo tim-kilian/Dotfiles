@@ -220,6 +220,7 @@ groups = [
         "0",
         label=nf.icons["fa_home"] + "⁰",
         layout="float",
+        matches=[Match(wm_class="conky")],
     ),
 ]
 # Cool icons: fa_wechat, mdi_email mdi_cloud fae_galery mdi_camcorder_box fa_rocket fa_heart
@@ -371,6 +372,17 @@ screens = [
                     },
                 ),
                 widget.TextBox(
+                    nf.icons["mdi_bell"],
+                    font="Hack Nerd Font",
+                    fontsize=16,
+                    mouse_callbacks={
+                        "Button1": lambda: subprocess.call(
+                            "kill -s USR1 $(pidof deadd-notification-center)",
+                            shell=True,
+                        )
+                    },
+                ),
+                widget.TextBox(
                     nf.icons["iec_power"],
                     font="Hack Nerd Font",
                     fontsize=16,
@@ -519,6 +531,7 @@ floating_layout = layout.Floating(
         Match(wm_class="bijiben"),
         Match(wm_class="oblogout"),
         Match(wm_class="pavucontrol"),
+        Match(wm_class="conky"),
     ],
     border_width=0,
     border_focus="#333333",
@@ -551,6 +564,10 @@ def client_managed(window):
 
 @hook.subscribe.focus_change
 def focus_change():
+    for window in qtile.currentGroup.windows:
+        if window.floating:
+            window.cmd_bring_to_front()
+
     if hasattr(qtile.current_layout, "cmd_sort_windows"):
         qtile.current_layout.cmd_sort_windows(sortSections)
 

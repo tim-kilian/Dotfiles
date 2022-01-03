@@ -110,6 +110,22 @@ if type -p dunst >/dev/null; then
 fi
 
 ##
+# deadd
+##
+
+if type -p deadd-notification-center >/dev/null; then
+    mkdir -p ~/.config/deadd/
+
+    sudo rm -rf ~/.config/deadd/deadd.conf >/dev/null 2>&1
+    sudo rm -rf ~/.config/deadd/deadd.css >/dev/null 2>&1
+
+    ln -sf $SCRIPT_DIR/deadd/deadd.conf ~/.config/deadd/deadd.conf
+    ln -sf $SCRIPT_DIR/deadd/deadd.css ~/.config/deadd/deadd.css
+
+    echo "Configured deadd"
+fi
+
+##
 # oblogout
 ##
 
