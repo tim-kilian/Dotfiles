@@ -1,6 +1,7 @@
 from typing import List  # noqa: F401
 
 from libqtile import qtile, bar, layout, widget, hook
+from libqtile.backend import base
 from libqtile.config import Click, Drag, Group, ScratchPad, DropDown, Key, Match, Screen
 from libqtile.lazy import lazy
 from libqtile.utils import guess_terminal
@@ -190,17 +191,17 @@ groups = [
     Group(
         "4",
         label=nf.icons["dev_terminal"] + "⁴",
-        layout="monadtall",
+        # layout="monadtall",
     ),
     Group(
         "5",
         label=nf.icons["mdi_file_document"] + "⁵",
-        layout="monadtall",
+        # layout="monadtall",
     ),
     Group(
         "6",
         label=nf.icons["mdi_image"] + "⁶",
-        layout="monadtall",
+        # layout="monadtall",
     ),
     Group(
         "7",
@@ -214,7 +215,7 @@ groups = [
     Group(
         "9",
         label=nf.icons["fa_gear"] + "⁹",
-        layout="monadtall",
+        # layout="monadtall",
     ),
     Group(
         "0",
@@ -244,7 +245,16 @@ for i in groups:
     )
 
 layouts = [
-    three.ThreeCol(border_width=0, margin=16, single_margin=0, ratio=0.5),
+    layout.Columns(num_columns=2, border_width=0, margin=16, margin_on_single=0),
+    layout.MonadTall(
+        border_width=0,
+        margin=16,
+        single_margin=0,
+        # align=1,
+        ratio=0.6,
+    ),
+    layout.Stack(num_stacks=2, border_width=0, margin=16, single_margin=0),
+    # three.ThreeCol(border_width=0, margin=16, single_margin=0, ratio=0.5),
     layout.Max(),
     layout.Floating(
         border_width=0,
@@ -262,14 +272,6 @@ layouts = [
         padding_y=5,
         section_top=4,
         section_left=16,
-    ),
-    layout.Columns(num_columns=3, border_width=0, margin=16, margin_on_single=0),
-    layout.MonadTall(
-        border_width=0,
-        margin=16,
-        single_margin=0,
-        # align=1,
-        ratio=0.6,
     ),
     # Try more layouts by unleashing below layouts.
     # layout.Stack(num_stacks=2),
@@ -547,24 +549,35 @@ auto_minimize = True
 
 @hook.subscribe.startup_once
 def start_once():
+    subprocess.call(["notify-send", "Started once"])
     qtile.move_to_group("0")
     subprocess.call([os.path.expanduser("~") + "/.config/qtile/autostart.sh"])
 
 
 @hook.subscribe.screen_change
 def screen_change(qtile, ev):
+    subprocess.call(["notify-send", "Screen changed"])
     subprocess.call(["nitrogen", "--restore"])
 
 
 @hook.subscribe.client_managed
 def client_managed(window):
+    # subprocess.call(["notify-send", "Client Managed"])
     if hasattr(qtile.current_layout, "cmd_sort_windows"):
         qtile.current_layout.cmd_sort_windows(sortSections)
 
 
+@hook.subscribe.client_new
+def client_new(window):
+    if window.name is not "plank":
+        subprocess.call(
+            os.path.expanduser("~") + "/.config/qtile/scripts/plank.sh", shell=True
+        )
+
+
 @hook.subscribe.focus_change
 def focus_change():
-    for window in qtile.currentGroup.windows:
+    for window in qtile.current_group.windows:
         if window.floating:
             window.cmd_bring_to_front()
 

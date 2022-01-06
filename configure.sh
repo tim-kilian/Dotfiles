@@ -72,11 +72,13 @@ if type -p qtile >/dev/null; then
     sudo rm -rf ~/.config/qtile/default_config.py >/dev/null 2>&1
     sudo rm -rf ~/.config/qtile/autostart.sh >/dev/null 2>&1
     sudo rm -rf ~/.config/qtile/custom >/dev/null 2>&1
+    sudo rm -rf ~/.config/qtile/scripts >/dev/null 2>&1
 
     ln -sf $SCRIPT_DIR/qtile/config.py ~/.config/qtile/config.py
     ln -sf $SCRIPT_DIR/qtile/default_config.py ~/.config/qtile/default_config.py
     ln -sf $SCRIPT_DIR/qtile/autostart.sh ~/.config/qtile/autostart.sh
     ln -sf $SCRIPT_DIR/qtile/custom ~/.config/qtile/custom
+    ln -sf $SCRIPT_DIR/qtile/scripts ~/.config/qtile/scripts
 
     echo "Configured qtile"
 fi

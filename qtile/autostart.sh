@@ -1,5 +1,6 @@
 #!/bin/env bash
 
+xlayoutdisplay &
 lxsession &
 # /home/tkilian/Projects/picom-dccsillag/build/src/picom &
 picom &
