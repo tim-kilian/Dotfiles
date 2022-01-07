@@ -245,15 +245,15 @@ for i in groups:
     )
 
 layouts = [
-    layout.Columns(num_columns=2, border_width=0, margin=16, margin_on_single=0),
+    layout.Columns(num_columns=2, border_width=0, margin=8, margin_on_single=0),
     layout.MonadTall(
         border_width=0,
-        margin=16,
+        margin=8,
         single_margin=0,
         # align=1,
         ratio=0.6,
     ),
-    layout.Stack(num_stacks=2, border_width=0, margin=16, single_margin=0),
+    layout.Stack(num_stacks=2, border_width=0, margin=8, single_margin=0),
     # three.ThreeCol(border_width=0, margin=16, single_margin=0, ratio=0.5),
     layout.Max(),
     layout.Floating(
@@ -293,210 +293,133 @@ widget_defaults = dict(
 )
 extension_defaults = widget_defaults.copy()
 
+homeWidget = widget.TextBox(
+    nf.icons["linux_archlinux"],
+    font="Hack Nerd Font",
+    fontsize=16,
+    foreground="#1793d1",
+    mouse_callbacks={"Button1": lambda: qtile.cmd_simulate_keypress([mod], "g")},
+    padding=14,
+)
+layoutWidget = widget.CurrentLayoutIcon(
+    custom_icon_paths=[
+        os.path.expanduser("~") + "/.config/qtile/custom/icons",
+        os.path.expanduser("~") + "/icons",
+    ],
+    scale=0.7,
+)
+groupWidet = widget.GroupBox(
+    font="Hack Nerd Font", fontsize=16, padding=3, disable_drag=True
+)
+windowCountWidget = widget.WindowCount()
+taskListWidget = widget.TaskList(
+    fontsize=13,
+    margin_y=2,
+    padding_y=2,
+    unfocused_border="#444444",
+    parse_text=parse_title,
+)
+updatesWidget = widget.CheckUpdates()
+cpuWidget = widget.CPU(
+    format=nf.icons["mdi_chip"] + " {load_percent}%",
+    font="Hack Nerd Font",
+    foreground="#EC9A29",
+    mouse_callbacks={"Button1": lambda: qtile.cmd_simulate_keypress([mod], "h")},
+)
+cpuGraphWidget = widget.CPUGraph(
+    samples=60,
+    border_width=0,
+    graph_color="#EC9A29",
+    fill_color="92140C.3",
+    mouse_callbacks={"Button1": lambda: qtile.cmd_simulate_keypress([mod], "h")},
+)
+memoryWidget = widget.Memory(
+    format=nf.icons["mdi_memory"] + " {MemPercent}%",
+    font="Hack Nerd Font",
+    fontsize=14,
+    foreground="#0088cc",
+    mouse_callbacks={"Button1": lambda: qtile.cmd_simulate_keypress([mod], "h")},
+)
+memoryGraphWidget = widget.MemoryGraph(
+    samples=60,
+    border_width=0,
+    graph_color="#0088cc",
+    mouse_callbacks={"Button1": lambda: qtile.cmd_simulate_keypress([mod], "h")},
+)
+sysTrayWidget = widget.Systray(icon_size=21)
+clockWidget = widget.Clock(
+    format="   %H:%M",
+    mouse_callbacks={"Button1": lambda: qtile.cmd_spawn("clocks")},
+)
+dateWidget = widget.Clock(
+    format="  %d.%m.%Y",
+    mouse_callbacks={"Button1": lambda: qtile.cmd_spawn("clocks")},
+)
+notificationWidget = widget.TextBox(
+    nf.icons["mdi_bell"],
+    font="Hack Nerd Font",
+    fontsize=16,
+    mouse_callbacks={
+        "Button1": lambda: subprocess.call(
+            "kill -s USR1 $(pidof deadd-notification-center)",
+            shell=True,
+        )
+    },
+)
+powerWidget = widget.TextBox(
+    nf.icons["iec_power"],
+    font="Hack Nerd Font",
+    fontsize=16,
+    mouse_callbacks={"Button1": lambda: qtile.cmd_spawn("oblogout")},
+)
+
+primaryBar = bar.Bar(
+    [
+        homeWidget,
+        layoutWidget,
+        groupWidet,
+        windowCountWidget,
+        taskListWidget,
+        widget.Spacer(),
+        updatesWidget,
+        cpuWidget,
+        cpuGraphWidget,
+        memoryWidget,
+        memoryGraphWidget,
+        sysTrayWidget,
+        clockWidget,
+        dateWidget,
+        notificationWidget,
+        powerWidget,
+    ],
+    24,
+    background="#34363d",
+    border_color=["#0088cc", "#0088cc", "#0088cc", "#0088cc"],
+    border_width=[0, 0, 2, 0],
+)
+secondaryBar = bar.Bar(
+    [
+        homeWidget,
+        layoutWidget,
+        groupWidet,
+        windowCountWidget,
+        taskListWidget,
+        widget.Spacer(),
+        clockWidget,
+        dateWidget,
+        notificationWidget,
+        powerWidget,
+    ],
+    24,
+    background="#34363d",
+    border_color=["#0088cc", "#0088cc", "#0088cc", "#0088cc"],
+    border_width=[0, 0, 2, 0],
+)
+
 screens = [
-    Screen(
-        top=bar.Bar(
-            [
-                widget.TextBox(
-                    nf.icons["linux_archlinux"],
-                    font="Hack Nerd Font",
-                    fontsize=16,
-                    foreground="#1793d1",
-                    mouse_callbacks={
-                        "Button1": lambda: qtile.cmd_simulate_keypress([mod], "g")
-                    },
-                    padding=14,
-                ),
-                widget.CurrentLayoutIcon(
-                    custom_icon_paths=[
-                        os.path.expanduser("~") + "/.config/qtile/custom/icons",
-                        os.path.expanduser("~") + "/icons",
-                    ],
-                    scale=0.7,
-                ),
-                widget.GroupBox(font="Hack Nerd Font", fontsize=16, padding=3),
-                # widget.CurrentLayout(),
-                widget.WindowCount(),
-                widget.TaskList(
-                    fontsize=13,
-                    margin_y=2,
-                    padding_y=2,
-                    unfocused_border="#444444",
-                    parse_text=parse_title,
-                ),
-                widget.Chord(
-                    chords_colors={
-                        "launch": ("#ff0000", "#ffffff"),
-                    },
-                    name_transform=lambda name: name.upper(),
-                ),
-                widget.Spacer(),
-                widget.CheckUpdates(),
-                widget.CPU(
-                    format=nf.icons["mdi_chip"] + " {load_percent}%",
-                    font="Hack Nerd Font",
-                    foreground="#EC9A29",
-                    mouse_callbacks={
-                        "Button1": lambda: qtile.cmd_simulate_keypress([mod], "h")
-                    },
-                ),
-                widget.CPUGraph(
-                    samples=60,
-                    border_width=0,
-                    graph_color="#EC9A29",
-                    fill_color="92140C.3",
-                    mouse_callbacks={
-                        "Button1": lambda: qtile.cmd_simulate_keypress([mod], "h")
-                    },
-                ),
-                widget.Memory(
-                    format=nf.icons["mdi_memory"] + " {MemPercent}%",
-                    font="Hack Nerd Font",
-                    fontsize=14,
-                    foreground="#0088cc",
-                    mouse_callbacks={
-                        "Button1": lambda: qtile.cmd_simulate_keypress([mod], "h")
-                    },
-                ),
-                widget.MemoryGraph(
-                    samples=60,
-                    border_width=0,
-                    graph_color="#0088cc",
-                    mouse_callbacks={
-                        "Button1": lambda: qtile.cmd_simulate_keypress([mod], "h")
-                    },
-                ),
-                widget.Systray(icon_size=22),
-                widget.Clock(
-                    format="   %H:%M    %d.%m.%Y",
-                    mouse_callbacks={
-                        "Button1": lambda: qtile.cmd_spawn("gnome-calendar")
-                    },
-                ),
-                widget.TextBox(
-                    nf.icons["mdi_bell"],
-                    font="Hack Nerd Font",
-                    fontsize=16,
-                    mouse_callbacks={
-                        "Button1": lambda: subprocess.call(
-                            "kill -s USR1 $(pidof deadd-notification-center)",
-                            shell=True,
-                        )
-                    },
-                ),
-                widget.TextBox(
-                    nf.icons["iec_power"],
-                    font="Hack Nerd Font",
-                    fontsize=16,
-                    mouse_callbacks={"Button1": lambda: qtile.cmd_spawn("oblogout")},
-                ),
-            ],
-            24,
-            background="#34363d",
-            border_color=["#0088cc", "#0088cc", "#0088cc", "#0088cc"],
-            border_width=[0, 0, 2, 0],
-        ),
-    ),
-    Screen(
-        top=bar.Bar(
-            [
-                widget.TextBox(
-                    nf.icons["linux_archlinux"],
-                    font="Hack Nerd Font",
-                    fontsize=16,
-                    foreground="#1793d1",
-                    mouse_callbacks={
-                        "Button1": lambda: qtile.cmd_simulate_keypress([mod], "g")
-                    },
-                    padding=14,
-                ),
-                widget.GroupBox(font="Hack Nerd Font", fontsize=16, padding=3),
-                # widget.CurrentLayout(),
-                widget.CurrentLayoutIcon(
-                    custom_icon_paths=[
-                        os.path.expanduser("~") + "/.config/qtile/custom/icons",
-                        os.path.expanduser("~") + "/icons",
-                    ],
-                    scale=0.7,
-                ),
-                widget.WindowCount(),
-                widget.TaskList(
-                    fontsize=13,
-                    margin_y=2,
-                    padding_y=2,
-                    unfocused_border="#444444",
-                    parse_text=parse_title,
-                ),
-                widget.Spacer(),
-                widget.Clock(
-                    format="   %H:%M    %d.%m.%Y",
-                    mouse_callbacks={
-                        "Button1": lambda: qtile.cmd_spawn("gnome-calendar")
-                    },
-                ),
-                widget.TextBox(
-                    nf.icons["iec_power"],
-                    font="Hack Nerd Font",
-                    fontsize=16,
-                    mouse_callbacks={"Button1": lambda: qtile.cmd_spawn("oblogout")},
-                ),
-            ],
-            24,
-            background="#34363d",
-            border_color=["#0088cc", "#0088cc", "#0088cc", "#0088cc"],
-            border_width=[0, 0, 2, 0],
-        ),
-    ),
-    Screen(
-        top=bar.Bar(
-            [
-                widget.TextBox(
-                    nf.icons["linux_archlinux"],
-                    font="Hack Nerd Font",
-                    fontsize=16,
-                    foreground="#1793d1",
-                    mouse_callbacks={
-                        "Button1": lambda: qtile.cmd_simulate_keypress([mod], "g")
-                    },
-                    padding=14,
-                ),
-                widget.GroupBox(font="Hack Nerd Font", fontsize=16, padding=3),
-                # widget.CurrentLayout(),
-                widget.CurrentLayoutIcon(
-                    custom_icon_paths=[
-                        os.path.expanduser("~") + "/.config/qtile/custom/icons",
-                        os.path.expanduser("~") + "/icons",
-                    ],
-                    scale=0.7,
-                ),
-                widget.WindowCount(),
-                widget.TaskList(
-                    fontsize=13,
-                    margin_y=2,
-                    padding_y=2,
-                    unfocused_border="#444444",
-                    parse_text=parse_title,
-                ),
-                widget.Spacer(),
-                widget.Clock(
-                    format="   %H:%M    %d.%m.%Y",
-                    mouse_callbacks={
-                        "Button1": lambda: qtile.cmd_spawn("gnome-calendar")
-                    },
-                ),
-                widget.TextBox(
-                    nf.icons["iec_power"],
-                    font="Hack Nerd Font",
-                    fontsize=16,
-                    mouse_callbacks={"Button1": lambda: qtile.cmd_spawn("oblogout")},
-                ),
-            ],
-            24,
-            background="#34363d",
-            border_color=["#0088cc", "#0088cc", "#0088cc", "#0088cc"],
-            border_width=[0, 0, 2, 0],
-        ),
-    ),
+    Screen(top=primaryBar),
+    Screen(top=secondaryBar),
+    Screen(top=secondaryBar),
 ]
 
 # Drag floating layouts.
