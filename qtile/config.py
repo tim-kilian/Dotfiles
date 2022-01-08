@@ -153,6 +153,7 @@ keys = [
     Key([mod], "c", lazy.group["scratchpad"].dropdown_toggle("term")),
     Key([mod], "h", lazy.group["scratchpad"].dropdown_toggle("htop")),
     Key([mod], "g", lazy.group["scratchpad"].dropdown_toggle("apps")),
+    Key([mod, "shift"], "p", lazy.spawn("xlayoutdisplay")),
 ]
 
 groups = [
