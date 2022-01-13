@@ -3,7 +3,7 @@ Config {
     additionalFonts = [
       "xft:Font Awesome 5 Free Solid:size=10",
       "xft:Font Awesome 5 Brands:size=10",
-      "xft:Roboto:size=11"
+      "xft:Hack Nerdfont:size=11"
     ],
     alpha = 255,
     border = BottomB,

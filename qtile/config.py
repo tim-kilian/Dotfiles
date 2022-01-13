@@ -154,6 +154,7 @@ keys = [
     Key([mod], "h", lazy.group["scratchpad"].dropdown_toggle("htop")),
     Key([mod], "g", lazy.group["scratchpad"].dropdown_toggle("apps")),
     Key([mod, "shift"], "p", lazy.spawn("xlayoutdisplay")),
+    Key([mod, "shift"], "n", lazy.spawn("nitrogen --restore")),
 ]
 
 groups = [
@@ -294,7 +295,7 @@ widget_defaults = dict(
 )
 extension_defaults = widget_defaults.copy()
 
-homeWidget = widget.TextBox(
+homeWidget = lambda: widget.TextBox(
     nf.icons["linux_archlinux"],
     font="Hack Nerd Font",
     fontsize=16,
@@ -302,61 +303,65 @@ homeWidget = widget.TextBox(
     mouse_callbacks={"Button1": lambda: qtile.cmd_simulate_keypress([mod], "g")},
     padding=14,
 )
-layoutWidget = widget.CurrentLayoutIcon(
+layoutWidget = lambda: widget.CurrentLayoutIcon(
     custom_icon_paths=[
         os.path.expanduser("~") + "/.config/qtile/custom/icons",
         os.path.expanduser("~") + "/icons",
     ],
     scale=0.7,
 )
-groupWidet = widget.GroupBox(
+groupWidet = lambda: widget.GroupBox(
     font="Hack Nerd Font", fontsize=16, padding=3, disable_drag=True
 )
-windowCountWidget = widget.WindowCount()
-taskListWidget = widget.TaskList(
+windowCountWidget = lambda: widget.WindowCount()
+taskListWidget = lambda: widget.TaskList(
     fontsize=13,
     margin_y=2,
     padding_y=2,
     unfocused_border="#444444",
     parse_text=parse_title,
+    txt_minimized="\U0001F5D5 ",
+    txt_maximized="\U0001F5D6 ",
+    txt_floating="\U0001F5D7 ",
+    kill_button=True,
 )
-updatesWidget = widget.CheckUpdates()
-cpuWidget = widget.CPU(
+updatesWidget = lambda: widget.CheckUpdates()
+cpuWidget = lambda: widget.CPU(
     format=nf.icons["mdi_chip"] + " {load_percent}%",
     font="Hack Nerd Font",
     foreground="#EC9A29",
     mouse_callbacks={"Button1": lambda: qtile.cmd_simulate_keypress([mod], "h")},
 )
-cpuGraphWidget = widget.CPUGraph(
+cpuGraphWidget = lambda: widget.CPUGraph(
     samples=60,
     border_width=0,
     graph_color="#EC9A29",
     fill_color="92140C.3",
     mouse_callbacks={"Button1": lambda: qtile.cmd_simulate_keypress([mod], "h")},
 )
-memoryWidget = widget.Memory(
+memoryWidget = lambda: widget.Memory(
     format=nf.icons["mdi_memory"] + " {MemPercent}%",
     font="Hack Nerd Font",
     fontsize=14,
     foreground="#0088cc",
     mouse_callbacks={"Button1": lambda: qtile.cmd_simulate_keypress([mod], "h")},
 )
-memoryGraphWidget = widget.MemoryGraph(
+memoryGraphWidget = lambda: widget.MemoryGraph(
     samples=60,
     border_width=0,
     graph_color="#0088cc",
     mouse_callbacks={"Button1": lambda: qtile.cmd_simulate_keypress([mod], "h")},
 )
-sysTrayWidget = widget.Systray(icon_size=21)
-clockWidget = widget.Clock(
+sysTrayWidget = lambda: widget.Systray(icon_size=21)
+clockWidget = lambda: widget.Clock(
     format="   %H:%M",
     mouse_callbacks={"Button1": lambda: qtile.cmd_spawn("clocks")},
 )
-dateWidget = widget.Clock(
+dateWidget = lambda: widget.Clock(
     format="  %d.%m.%Y",
     mouse_callbacks={"Button1": lambda: qtile.cmd_spawn("clocks")},
 )
-notificationWidget = widget.TextBox(
+notificationWidget = lambda: widget.TextBox(
     nf.icons["mdi_bell"],
     font="Hack Nerd Font",
     fontsize=16,
@@ -367,49 +372,49 @@ notificationWidget = widget.TextBox(
         )
     },
 )
-powerWidget = widget.TextBox(
+powerWidget = lambda: widget.TextBox(
     nf.icons["iec_power"],
     font="Hack Nerd Font",
     fontsize=16,
     mouse_callbacks={"Button1": lambda: qtile.cmd_spawn("oblogout")},
 )
 
-primaryBar = bar.Bar(
+primaryBar = lambda: bar.Bar(
     [
-        homeWidget,
-        layoutWidget,
-        groupWidet,
-        windowCountWidget,
-        taskListWidget,
+        homeWidget(),
+        layoutWidget(),
+        groupWidet(),
+        windowCountWidget(),
+        taskListWidget(),
         widget.Spacer(),
-        updatesWidget,
-        cpuWidget,
-        cpuGraphWidget,
-        memoryWidget,
-        memoryGraphWidget,
-        sysTrayWidget,
-        clockWidget,
-        dateWidget,
-        notificationWidget,
-        powerWidget,
+        updatesWidget(),
+        cpuWidget(),
+        cpuGraphWidget(),
+        memoryWidget(),
+        memoryGraphWidget(),
+        sysTrayWidget(),
+        clockWidget(),
+        dateWidget(),
+        notificationWidget(),
+        powerWidget(),
     ],
     24,
     background="#34363d",
     border_color=["#0088cc", "#0088cc", "#0088cc", "#0088cc"],
     border_width=[0, 0, 2, 0],
 )
-secondaryBar = bar.Bar(
+secondaryBar = lambda: bar.Bar(
     [
-        homeWidget,
-        layoutWidget,
-        groupWidet,
-        windowCountWidget,
-        taskListWidget,
+        homeWidget(),
+        layoutWidget(),
+        groupWidet(),
+        windowCountWidget(),
+        taskListWidget(),
         widget.Spacer(),
-        clockWidget,
-        dateWidget,
-        notificationWidget,
-        powerWidget,
+        clockWidget(),
+        dateWidget(),
+        notificationWidget(),
+        powerWidget(),
     ],
     24,
     background="#34363d",
@@ -418,9 +423,9 @@ secondaryBar = bar.Bar(
 )
 
 screens = [
-    Screen(top=primaryBar),
-    Screen(top=secondaryBar),
-    Screen(top=secondaryBar),
+    Screen(top=primaryBar()),
+    Screen(top=secondaryBar()),
+    Screen(top=secondaryBar()),
 ]
 
 # Drag floating layouts.
@@ -476,6 +481,46 @@ def start_once():
     subprocess.call(["notify-send", "Started once"])
     qtile.move_to_group("0")
     subprocess.call([os.path.expanduser("~") + "/.config/qtile/autostart.sh"])
+
+    # processes = [
+    #     ["notify-send", "Started once"],
+    #     ["xlayoutdisplay"],
+    #     ["nitrogen", "--restore"],
+    #     ["lxsession"],
+    #     ["picom"],
+    #     ["nm-applet"],
+    #     ["deadd-notification-center"],
+    #     [
+    #         "xinput",
+    #         "set-prop",
+    #         "SynPS/2 Synaptics TouchPad",
+    #         "libinput Tapping Enabled",
+    #         1,
+    #     ],
+    #     [
+    #         "xinput",
+    #         "set-prop",
+    #         "SynPS/2 Synaptics TouchPad",
+    #         "libinput Natural Scrolling Enabled",
+    #         1,
+    #     ],
+    #     ["volctl"],
+    #     ["cbatticon"],
+    #     ["onboard"],
+    #     ["plank"],
+    #     ["conky", "-c", "~/.conky/Gotham/Gotham"],
+    #     [
+    #         "gsettings",
+    #         "set",
+    #         "org.cinnamon.desktop.default-applications.terminal",
+    #         "exec",
+    #         "tilix",
+    #     ],
+    #     ["redshift-gtk" "-l" "52.5155:13.4059"],
+    # ]
+
+    # for p in processes:
+    #     subprocess.Popen(p)
 
 
 @hook.subscribe.screen_change

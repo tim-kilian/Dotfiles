@@ -87,23 +87,32 @@ xmobarEscape = concatMap doubleLts
     --doubleLts '<' = "<<"
     doubleLts x = [x]
 
-myWorkspaces = clickable . map xmobarEscape $ ["<fn=3>1</fn>", "<fn=3>2</fn>", "<fn=3>3</fn>", "<fn=3>4</fn>", "<fn=3>5</fn>", "<fn=3>6</fn>", "<fn=3>7</fn>", "<fn=3>8</fn>", "<fn=3>9</fn>", "0"] -- "<fn=1>\xf121</fn>"                                                                              
-  where                                                                       
-    clickable l = 
+myWorkspaces = clickable . map xmobarEscape $ ["<fn=3>1</fn>", "<fn=3>2</fn>", "<fn=3>3</fn>", "<fn=3>4</fn>", "<fn=3>5</fn>", "<fn=3>6</fn>", "<fn=3>7</fn>", "<fn=3>8</fn>", "<fn=3>9</fn>", "10"] -- "<fn=1>\xf121</fn>"
+  where
+    clickable l =
       [
-        "<action=xdotool key super+" ++ show n ++ ">" ++ ws ++ "</action>" | (i,ws) <- zip [1..10] l,                                        
-        let n = i 
+        "<action=xdotool key super+" ++ show n ++ ">" ++ ws ++ "</action>" | (i,ws) <- zip [1..10] l,
+        let n = i
       ]
 
 myStartupHook = do
   --spawn "killall conky"
   --spawn "killall trayer"
   spawn "lxsession"
+  spawn "xlayoutdisplay -d 108"
   spawn "picom"
+  spawn "deadd-notification-center"
   setWMName "LG3D"
   spawn "nitrogen --restore"
   --spawn "xmodmap -layout de -variant dvp -option caps:swapescape -option lv3:ralt_switch "
   spawn "xmodmap ~/.xmodmap-`uname -n`"
+  spawn "tint2"
+  spawn "volctl"
+  spawn "cbatticon"
+  spawn "onboard"
+  spawn "xinput set-prop \"SynPS/2 Synaptics TouchPad\" \"libinput Tapping Enabled\" 1"
+  spawn "xinput set-prop \"SynPS/2 Synaptics TouchPad\" \"libinput Natural Scrolling Enabled\" 1"
+  spawn "gsettings set org.cinnamon.desktop.default-applications.terminal exec tilix"
   spawn "plank"
   spawn "dunst"
   --spawn "sleep 2 && trayer --edge top --align right --widthtype request --padding 6 --margin 410 --SetDockType true --SetPartialStrut true --expand true --monitor 0 --transparent true --alpha 0 --tint #424242 --height 24"
@@ -150,7 +159,7 @@ threeRow = renamed [Replace "threeRow"]
     $ Mirror
     $ ThreeCol 1 (3/100) (1/2)
 tabs = renamed [Replace "tabs"]
-    $ tabbed shrinkText def { 
+    $ tabbed shrinkText def {
         fontName = "xft:Mononoki Nerd Font:regular:pixelsize=11",
         activeColor = "#292d3e",
         inactiveColor = "#3e445e",
@@ -197,7 +206,7 @@ toggleFloat w = windows
         else W.float w (W.RationalRect (1 / 3) (1 / 4) (1 / 2) (1 / 2)) s
   )
 
-myHooks = manageSpawn <+> composeAll 
+myHooks = manageSpawn <+> composeAll
   [
     isDialog --> doFloat <+> placeHook (fixed (0.5, 0.5)),
     isFullscreen --> doFullFloat,
@@ -285,7 +294,7 @@ main = do
     keys = myKeys,
 
     startupHook = myStartupHook,
-    layoutHook = smartBorders (lessBorders FocusedOnly (avoidStruts myBaseLayout)),
+    layoutHook =  smartBorders (lessBorders FocusedOnly (avoidStruts myBaseLayout)),
     manageHook = myHooks,
     handleEventHook = myEventHook,
     logHook = myLogHook xmproc0 xmproc1 xmproc2
@@ -295,10 +304,14 @@ main = do
       ("M-p", spawn "dmenu_run -fn \"xft:Roboto:size=15\" -y 1"),
       --("<Escape>", spawn "killall plank"),
       --("<Backspace>", spawn "killall plank"),
+      ("<Print>", spawn "flameshot gui -p ~/Pictures/Screenshots/"),
+      ("M-<Print>", spawn "flameshot screen -p ~/Pictures/Screenshots/"),
       ("M-S-f", spawn "firefox"),
       ("M-e", spawn "nemo"),
       ("M-@", spawn "onboard"),
       ("M-S-e", spawn "gedit"),
+      ("M-S-p", spawn "xlayoutdisplay -d 108"),
+      ("M-S-n", spawn "nitrogen --restore"),
       ("M-S-ß", xmessage help)
     ])
 
