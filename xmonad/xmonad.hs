@@ -3,7 +3,7 @@ import XMonad.Core
 import XMonad.Layout.NoBorders
 import XMonad.Layout.Spacing
 import XMonad.Layout.ResizableTile
-import XMonad.Layout.BoringWindows (focusDown)
+import XMonad.Layout.BoringWindows (boringWindows, focusDown)
 import XMonad.Layout.Renamed (renamed, Rename(Replace))
 import XMonad.Layout.LimitWindows (limitWindows, increaseLimit, decreaseLimit)
 import XMonad.Layout.Tabbed
@@ -13,9 +13,12 @@ import XMonad.Layout.ThreeColumns
 import XMonad.Layout.CenteredMaster
 import XMonad.Layout.IndependentScreens
 import XMonad.Layout.GridVariants (Grid(Grid))
+import XMonad.Layout.Minimize
 import XMonad.Layout.MultiToggle (mkToggle, single, EOT(EOT), (??))
 import XMonad.Layout.MultiToggle.Instances (StdTransformers(NBFULL, MIRROR, NOBORDERS))
+import XMonad.Layout.MouseResizableTile
 import XMonad.Layout.Magnifier (magnifier)
+import XMonad.Layout.PerWorkspace
 import XMonad.Layout.WindowArranger (windowArrange, WindowArrangerMsg(..))
 import XMonad.Hooks.Place
 import XMonad.Hooks.ManageDocks
@@ -26,6 +29,7 @@ import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.SetWMName
 import XMonad.Hooks.ScreenCorners
 import XMonad.Actions.SpawnOn
+import XMonad.Actions.Minimize
 import XMonad.Util.WorkspaceCompare
 import XMonad.Util.EZConfig
 import XMonad.Util.Ungrab
@@ -44,6 +48,8 @@ import qualified XMonad.Layout.ToggleLayouts as T (toggleLayouts, ToggleLayout(T
 import qualified XMonad.Layout.MultiToggle as MT (Toggle(..))
 import qualified XMonad.Util.Hacks as Hacks
 
+import Control.Monad (replicateM_, liftM2)
+
 import System.IO
 import System.Exit
 
@@ -53,17 +59,23 @@ myKeys conf@(XConfig {modMask = mod4Mask}) = M.fromList $ [
     ((mod4Mask, xK_space), sendMessage NextLayout),
     ((mod4Mask .|. shiftMask, xK_space), setLayout $ XMonad.layoutHook conf),
     ((mod4Mask, xK_n), refresh),
-    ((mod4Mask, xK_Tab), windows W.focusDown),
-    ((mod4Mask .|. shiftMask, xK_Tab), windows W.focusUp),
+    ((mod4Mask, xK_Tab), nextLayout),
+    ((mod4Mask .|. shiftMask, xK_Tab), prevLayout),
+    ((mod1Mask, xK_Tab), windows W.focusDown),
+    ((mod1Mask .|. shiftMask, xK_Tab), windows W.focusUp),
     ((mod4Mask, xK_j), windows W.focusDown),
     ((mod4Mask, xK_k), windows W.focusUp),
-    ((mod4Mask, xK_m), windows W.focusMaster),
+    ((mod4Mask, xK_m), withFocused minimizeWindow),
+    ((mod4Mask .|. shiftMask, xK_m), withLastMinimized maximizeWindowAndFocus),
     ((mod4Mask, xK_Return), windows W.swapMaster),
     ((mod4Mask .|. shiftMask, xK_j), windows W.swapDown),
     ((mod4Mask .|. shiftMask, xK_k), windows W.swapUp),
-    ((mod4Mask, xK_h), sendMessage Shrink),
-    ((mod4Mask .|. shiftMask, xK_h), sendMessage Expand),
+    ((mod4Mask, xK_u), sendMessage Shrink),
+    ((mod4Mask .|. shiftMask, xK_u), sendMessage ShrinkSlave),
+    ((mod4Mask, xK_i), sendMessage Expand),
+    ((mod4Mask .|. shiftMask, xK_i), sendMessage ExpandSlave),
     ((mod4Mask, xK_t), withFocused toggleFloat),
+    ((mod4Mask, xK_f), toggleFull),
     ((mod4Mask, xK_comma), sendMessage (IncMasterN 1)),
     ((mod4Mask, xK_period), sendMessage (IncMasterN (-1))),
     ((mod4Mask, xK_Right), nextWS),
@@ -81,17 +93,19 @@ myKeys conf@(XConfig {modMask = mod4Mask}) = M.fromList $ [
     ((m .|. mod4Mask, k), windows $ f i) | (i, k) <- zip (XMonad.workspaces conf) [xK_1 .. xK_9],
     (f, m) <- [(W.greedyView, 0), (W.shift, shiftMask)]
   ]
+  where
+    nextLayout = sendMessage NextLayout
+    prevLayout = sendMessage NextLayout
 
 xmobarEscape = concatMap doubleLts
   where
-    --doubleLts '<' = "<<"
     doubleLts x = [x]
 
-myWorkspaces = clickable . map xmobarEscape $ ["<fn=3>1</fn>", "<fn=3>2</fn>", "<fn=3>3</fn>", "<fn=3>4</fn>", "<fn=3>5</fn>", "<fn=3>6</fn>", "<fn=3>7</fn>", "<fn=3>8</fn>", "<fn=3>9</fn>", "10"] -- "<fn=1>\xf121</fn>"
+myWorkspaces = clickable . map xmobarEscape $ ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
   where
     clickable l =
       [
-        "<action=xdotool key super+" ++ show n ++ ">" ++ ws ++ "</action>" | (i,ws) <- zip [1..10] l,
+        "<action=xdotool key super+" ++ show n ++ "><fn=3>" ++ ws ++ "</fn></action>" | (i,ws) <- zip [1..10] l,
         let n = i
       ]
 
@@ -106,7 +120,7 @@ myStartupHook = do
   spawn "nitrogen --restore"
   --spawn "xmodmap -layout de -variant dvp -option caps:swapescape -option lv3:ralt_switch "
   spawn "xmodmap ~/.xmodmap-`uname -n`"
-  spawn "tint2"
+  -- spawn "tint2"
   spawn "volctl"
   spawn "cbatticon"
   spawn "onboard"
@@ -127,13 +141,14 @@ mySpacing' i = spacingRaw True (Border i i i i) True (Border i i i i) True
 tall = renamed [Replace "tall"]
     $ limitWindows 12
     $ mySpacing 8
-    $ ResizableTall 1 (3/100) (1/2) []
+    $ mouseResizableTile
 magnify = renamed [Replace "magnify"]
     $ magnifier
     $ limitWindows 12
     $ mySpacing 8
     $ ResizableTall 1 (3/100) (1/2) []
 monocle = renamed [Replace "monocle"]
+    $ noBorders
     $ limitWindows 20 Full
 floats = renamed [Replace "floats"]
     $ limitWindows 20 simplestFloat
@@ -159,6 +174,7 @@ threeRow = renamed [Replace "threeRow"]
     $ Mirror
     $ ThreeCol 1 (3/100) (1/2)
 tabs = renamed [Replace "tabs"]
+    $ noBorders
     $ tabbed shrinkText def {
         fontName = "xft:Mononoki Nerd Font:regular:pixelsize=11",
         activeColor = "#292d3e",
@@ -169,26 +185,23 @@ tabs = renamed [Replace "tabs"]
         inactiveTextColor = "#d0d0d0"
       }
 
-myBaseLayout = screenCornerLayoutHook $ mouseResize $ windowArrange $ T.toggleLayouts floats $ mkToggle (NBFULL ?? NOBORDERS ?? EOT) myDefaultLayout
-    where
-      myDefaultLayout = tall
-        ||| threeColMid
-        ||| magnify
-        ||| noBorders tabs
-        ||| noBorders monocle
-        -- ||| floats
-        -- ||| grid
-        -- ||| spirals
-        -- ||| threeCol
-        -- ||| threeRow
-
-
---myBaseLayout = screenCornerLayoutHook $ tiled ||| Mirror tiled ||| Full
---    where
---      tiled = spacing 5 $ Tall nmaster delta ratio
---      nmaster = 1
---      ratio = 1/2
---      delta = 1/100
+myBaseLayout = screenCornerLayoutHook
+    $ mouseResize
+    $ minimize
+    $ boringWindows
+    $ windowArrange
+    $ T.toggleLayouts floats
+    $ mkToggle (NBFULL ?? NOBORDERS ?? EOT)
+    $ onWorkspace (myWorkspaces !! 1) codeLayouts
+    $ onWorkspace (myWorkspaces !! 2) chatLayouts
+    $ allLayouts
+  where
+    allLayouts = tall ||| threeColMid ||| magnify ||| monocle
+      -- ||| floats
+      -- ||| grid
+      -- ||| spirals
+    codeLayouts = tabs
+    chatLayouts = tall
 
 data FocusedOnly = FocusedOnly
   deriving (Show, Read)
@@ -206,6 +219,18 @@ toggleFloat w = windows
         else W.float w (W.RationalRect (1 / 3) (1 / 4) (1 / 2) (1 / 2)) s
   )
 
+toggleFull = withFocused (\windowId -> do
+{
+   floats <- gets (W.floating . windowset);
+   if windowId `M.member` floats
+   then do
+      --  withFocused $ toggleBorder
+       withFocused $ windows . W.sink
+   else do
+      --  withFocused $ toggleBorder
+       withFocused $  windows . (flip W.float $ W.RationalRect 0 0 1 1)
+})
+
 myHooks = manageSpawn <+> composeAll
   [
     isDialog --> doFloat <+> placeHook (fixed (0.5, 0.5)),
@@ -218,13 +243,20 @@ myHooks = manageSpawn <+> composeAll
     resource =? "onboard" --> doFloat,
     resource =? "xmessage" --> doFloat,
     className =? "Tor Browser" --> doFloat,
+    className =? "code-oss" --> viewShift (code),
+    className =? "jetbrains-idea" --> viewShift (code),
+    className =? "Microsoft Teams - Preview" --> viewShift (chat),
     resource =? "pavucontrol" --> doFloat <+> placeHook (fixed (0.5, 0.5)),
     title =? "win0" --> doFloat,
     className =? "Xfce4-appfinder" --> doRectFloat (W.RationalRect 0 (1/50) (1/2) (1/2)),
     --resource =? "xfce4-appfinder" --> (/= focused) --> kill
-    title =? "Microsoft Teams" --> doFloat,
     title =? "Microsoft Teams Notification" --> doSideFloat NE -- <+> doF focusDown
   ]
+  where
+    viewShift = doF . liftM2 (.) W.greedyView W.shift
+    web = myWorkspaces!!0
+    code = myWorkspaces!!1
+    chat = myWorkspaces!!2
 
 when p s  = if p then s else pure ()
 data Focus = NoFocus | Focus Window deriving (Eq, Read, Show, Typeable)
@@ -296,7 +328,7 @@ main = do
 
     startupHook = myStartupHook,
     layoutHook =  smartBorders (lessBorders FocusedOnly (avoidStruts myBaseLayout)),
-    manageHook = myHooks,
+    manageHook = manageDocks <+> myHooks,
     handleEventHook = myEventHook,
     logHook = myLogHook xmproc0 xmproc1 xmproc2
   } `additionalKeysP` [
@@ -307,7 +339,6 @@ main = do
       --("<Backspace>", spawn "killall plank"),
       ("<Print>", spawn "flameshot gui -p ~/Pictures/Screenshots/"),
       ("M-<Print>", spawn "flameshot screen -p ~/Pictures/Screenshots/"),
-      ("M-S-f", spawn "firefox"),
       ("M-e", spawn "nemo"),
       ("M-@", spawn "onboard"),
       ("M-S-e", spawn "gedit"),

@@ -61,13 +61,9 @@ Config {
         "-O", "<fn=1>\xf028</fn>",
         "-c", "#E0E0E0",
         "-C", "#E0E0E0"
-      ] 10,
-      Run Wireless "wlp2s0" [
-        "-t", "<action=`sudo -A systemctl restart wpa_supplicant.service` button=1><fn=1>\xf1eb</fn> <essid></action>",
-        "-x", "Not Connected"
       ] 10
     ],
     sepChar = "%",
     alignSep = "}{",
-    template = "  <action=`xfce4-appfinder --disable-server` button=1><icon=arch.xpm/></action>   %UnsafeStdinReader% } %date% { %cpu%   %memory%   %wlp2s0wi%    %default:Master%   %battery%    <action=`oblogout` button=1><fn=1><raw=1:/></fn></action>   "
+    template = "  <action=`xfce4-appfinder --disable-server` button=1><icon=arch.xpm/></action>   %UnsafeStdinReader% } %date% { %cpu%   %memory%   %default:Master%   %battery%    <action=`oblogout` button=1><fn=1><raw=1:/></fn></action>   "
 }
