@@ -217,6 +217,7 @@ myHooks = manageSpawn <+> composeAll
     resource =? "gxmessage" --> doFloat <+> placeHook (fixed (0.5, 0.5)),
     resource =? "onboard" --> doFloat,
     resource =? "xmessage" --> doFloat,
+    className =? "Tor Browser" --> doFloat,
     resource =? "pavucontrol" --> doFloat <+> placeHook (fixed (0.5, 0.5)),
     title =? "win0" --> doFloat,
     className =? "Xfce4-appfinder" --> doRectFloat (W.RationalRect 0 (1/50) (1/2) (1/2)),
