@@ -18,7 +18,6 @@ import XMonad.Layout.Minimize
 import XMonad.Layout.MultiToggle (mkToggle, single, EOT(EOT), (??))
 import XMonad.Layout.MultiToggle.Instances (StdTransformers(NBFULL, MIRROR, NOBORDERS))
 import XMonad.Layout.MouseResizableTile
-import XMonad.Layout.Magnifier (magnifier)
 import XMonad.Layout.PerWorkspace
 import XMonad.Layout.Reflect
 import XMonad.Layout.WindowArranger (windowArrange, WindowArrangerMsg(..))
@@ -42,6 +41,7 @@ import XMonad.Actions.MouseResize
 import XMonad.Actions.MouseGestures
 import Graphics.X11.ExtraTypes.XF86
 
+import qualified XMonad.Layout.Magnifier as Mag
 import qualified XMonad.StackSet as W
 import qualified Data.Map as M
 import qualified Data.Maybe as May
@@ -86,6 +86,9 @@ myKeys conf@(XConfig {modMask = mod4Mask}) = M.fromList $ [
     ((mod4Mask .|. shiftMask, xK_Left), shiftToPrev),
     ((mod4Mask .|. controlMask, xK_x), sendMessage $ MT.Toggle REFLECTX),
     ((mod4Mask .|. controlMask, xK_y), sendMessage $ MT.Toggle REFLECTY),
+    ((mod4Mask, xK_o), sendMessage Mag.Toggle),
+    ((mod4Mask, xK_plus), sendMessage Mag.MagnifyMore),
+    ((mod4Mask, xK_minus), sendMessage Mag.MagnifyLess),
     ((0, xF86XK_AudioMute), spawn "amixer set Master 'toggle'"),
     ((0, xF86XK_AudioRaiseVolume), spawn "amixer set Master 5%+"),
     ((0, xF86XK_AudioLowerVolume), spawn "amixer set Master 5%-"),
@@ -105,7 +108,7 @@ xmobarEscape = concatMap doubleLts
   where
     doubleLts x = [x]
 
-myWorkspaces = clickable . map xmobarEscape $ ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+myWorkspaces = clickable . map xmobarEscape $ ["\xf015", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
   where
     clickable l =
       [
@@ -151,49 +154,51 @@ mySpacing' i = spacingRaw True (Border i i i i) True (Border i i i i) True
 
 tall = renamed [Replace "tall"]
     $ minimize
+    $ Mag.magnifierOff
     $ limitWindows 12
     $ mySpacing 8
     -- $ gaps [(D,72)]
     $ mouseResizableTile
-magnify = renamed [Replace "magnify"]
-    $ minimize
-    $ magnifier
-    $ limitWindows 12
-    $ mySpacing 8
-    $ ResizableTall 1 (3/100) (1/2) []
 monocle = renamed [Replace "monocle"]
     $ minimize
+    $ Mag.magnifierOff
     $ noBorders
     $ mySpacing 8
     -- $ gaps [(D,72)]
     $ limitWindows 20 Full
 floats = renamed [Replace "floats"]
     $ minimize
+    $ Mag.magnifierOff
     $ limitWindows 20 simplestFloat
 grid = renamed [Replace "grid"]
     $ minimize
+    $ Mag.magnifierOff
     $ limitWindows 12
     $ mySpacing 8
     $ mkToggle (single MIRROR)
     $ Grid (16/10)
 spirals = renamed [Replace "spirals"]
     $ minimize
+    $ Mag.magnifierOff
     $ mySpacing 8
     $ spiral (6/7)
 threeCol = renamed [Replace "threeCol"]
     $ minimize
+    $ Mag.magnifierOff
     $ limitWindows 7
     $ mySpacing 8
     -- $ gaps [(D,72)]
     $ ThreeCol 1 (3/100) (1/2)
 threeColMid = renamed [Replace "threeColMid"]
     $ minimize
+    $ Mag.magnifierOff
     $ limitWindows 7
     $ mySpacing 8
     -- $ gaps [(D,72)]
     $ ThreeColMid 1 (3/100) (1/2)
 threeRow = renamed [Replace "threeRow"]
     $ minimize
+    $ Mag.magnifierOff
     $ limitWindows 7
     $ mySpacing 8
     $ Mirror
@@ -201,6 +206,7 @@ threeRow = renamed [Replace "threeRow"]
 tabs = renamed [Replace "tabs"]
     $ noBorders
     $ minimize
+    $ Mag.magnifierOff
     $ tabbed shrinkText def {
         fontName = "xft:Mononoki Nerd Font:regular:pixelsize=11",
         activeColor = "#292d3e",
@@ -223,7 +229,7 @@ myBaseLayout = screenCornerLayoutHook
     $ onWorkspace (myWorkspaces !! 2) chatLayouts
     $ allLayouts
   where
-    allLayouts = tall ||| threeColMid ||| magnify ||| monocle
+    allLayouts = tall ||| threeColMid ||| monocle
       -- ||| floats
       -- ||| grid
       -- ||| spirals
