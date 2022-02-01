@@ -4,6 +4,7 @@ import XMonad.Layout.NoBorders
 import XMonad.Layout.Spacing
 import XMonad.Layout.ResizableTile
 import XMonad.Layout.BoringWindows (boringWindows, focusDown)
+import XMonad.Layout.Gaps
 import XMonad.Layout.Renamed (renamed, Rename(Replace))
 import XMonad.Layout.LimitWindows (limitWindows, increaseLimit, decreaseLimit)
 import XMonad.Layout.Tabbed
@@ -19,6 +20,7 @@ import XMonad.Layout.MultiToggle.Instances (StdTransformers(NBFULL, MIRROR, NOBO
 import XMonad.Layout.MouseResizableTile
 import XMonad.Layout.Magnifier (magnifier)
 import XMonad.Layout.PerWorkspace
+import XMonad.Layout.Reflect
 import XMonad.Layout.WindowArranger (windowArrange, WindowArrangerMsg(..))
 import XMonad.Hooks.Place
 import XMonad.Hooks.ManageDocks
@@ -82,6 +84,8 @@ myKeys conf@(XConfig {modMask = mod4Mask}) = M.fromList $ [
     ((mod4Mask .|. shiftMask, xK_Right), shiftToNext),
     ((mod4Mask, xK_Left), prevWS),
     ((mod4Mask .|. shiftMask, xK_Left), shiftToPrev),
+    ((mod4Mask .|. controlMask, xK_x), sendMessage $ MT.Toggle REFLECTX),
+    ((mod4Mask .|. controlMask, xK_y), sendMessage $ MT.Toggle REFLECTY),
     ((0, xF86XK_AudioMute), spawn "amixer set Master 'toggle'"),
     ((0, xF86XK_AudioRaiseVolume), spawn "amixer set Master 5%+"),
     ((0, xF86XK_AudioLowerVolume), spawn "amixer set Master 5%-"),
@@ -111,8 +115,14 @@ myWorkspaces = clickable . map xmobarEscape $ ["1", "2", "3", "4", "5", "6", "7"
 
 myStartupHook = do
   --spawn "killall conky"
-  --spawn "killall trayer"
+  spawn "killall lxsession"
+  spawn "killall deadd-notification-center"
+  spawn "killall trayer"
+  spawn "killall cbatticon"
+  spawn "killall clipit"
+  spawn "killall volctl"
   spawn "lxsession"
+  spawn "clipit -d"
   spawn "xlayoutdisplay -d 108"
   spawn "picom"
   spawn "deadd-notification-center"
@@ -123,6 +133,7 @@ myStartupHook = do
   -- spawn "tint2"
   spawn "volctl"
   spawn "cbatticon"
+  spawn "trayer --tint 0x20222a --alpha 0 --transparent true --expand true --SetDockType true --iconspacing 3 --margin 16 --widthtype pixel --distance 16 --width 240 --height 30 --padding 8 --edge top --align right"
   spawn "onboard"
   spawn "xinput set-prop \"SynPS/2 Synaptics TouchPad\" \"libinput Tapping Enabled\" 1"
   spawn "xinput set-prop \"SynPS/2 Synaptics TouchPad\" \"libinput Natural Scrolling Enabled\" 1"
@@ -139,42 +150,57 @@ mySpacing' i = spacingRaw True (Border i i i i) True (Border i i i i) True
 
 
 tall = renamed [Replace "tall"]
+    $ minimize
     $ limitWindows 12
     $ mySpacing 8
+    -- $ gaps [(D,72)]
     $ mouseResizableTile
 magnify = renamed [Replace "magnify"]
+    $ minimize
     $ magnifier
     $ limitWindows 12
     $ mySpacing 8
     $ ResizableTall 1 (3/100) (1/2) []
 monocle = renamed [Replace "monocle"]
+    $ minimize
     $ noBorders
+    $ mySpacing 8
+    -- $ gaps [(D,72)]
     $ limitWindows 20 Full
 floats = renamed [Replace "floats"]
+    $ minimize
     $ limitWindows 20 simplestFloat
 grid = renamed [Replace "grid"]
+    $ minimize
     $ limitWindows 12
     $ mySpacing 8
     $ mkToggle (single MIRROR)
     $ Grid (16/10)
 spirals = renamed [Replace "spirals"]
-    $ mySpacing' 8
+    $ minimize
+    $ mySpacing 8
     $ spiral (6/7)
 threeCol = renamed [Replace "threeCol"]
+    $ minimize
     $ limitWindows 7
-    $ mySpacing' 8
+    $ mySpacing 8
+    -- $ gaps [(D,72)]
     $ ThreeCol 1 (3/100) (1/2)
 threeColMid = renamed [Replace "threeColMid"]
+    $ minimize
     $ limitWindows 7
-    $ mySpacing' 8
+    $ mySpacing 8
+    -- $ gaps [(D,72)]
     $ ThreeColMid 1 (3/100) (1/2)
 threeRow = renamed [Replace "threeRow"]
+    $ minimize
     $ limitWindows 7
-    $ mySpacing' 8
+    $ mySpacing 8
     $ Mirror
     $ ThreeCol 1 (3/100) (1/2)
 tabs = renamed [Replace "tabs"]
     $ noBorders
+    $ minimize
     $ tabbed shrinkText def {
         fontName = "xft:Mononoki Nerd Font:regular:pixelsize=11",
         activeColor = "#292d3e",
@@ -187,11 +213,12 @@ tabs = renamed [Replace "tabs"]
 
 myBaseLayout = screenCornerLayoutHook
     $ mouseResize
-    $ minimize
     $ boringWindows
     $ windowArrange
     $ T.toggleLayouts floats
     $ mkToggle (NBFULL ?? NOBORDERS ?? EOT)
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
     $ onWorkspace (myWorkspaces !! 1) codeLayouts
     $ onWorkspace (myWorkspaces !! 2) chatLayouts
     $ allLayouts
@@ -224,12 +251,12 @@ toggleFull = withFocused (\windowId -> do
    floats <- gets (W.floating . windowset);
    if windowId `M.member` floats
    then do
-      --  withFocused $ toggleBorder
        withFocused $ windows . W.sink
    else do
-      --  withFocused $ toggleBorder
        withFocused $  windows . (flip W.float $ W.RationalRect 0 0 1 1)
 })
+
+doLowerStack = ask >>= \w -> liftX $ withDisplay $ \dpy -> io (lowerWindow dpy w) >> mempty
 
 myHooks = manageSpawn <+> composeAll
   [
@@ -237,11 +264,12 @@ myHooks = manageSpawn <+> composeAll
     isFullscreen --> doFullFloat,
     resource =? "desktop_window" --> doIgnore,
     resource =? "plank" --> hasBorder False,
+    className =? "trayer" --> doLowerStack,
     resource =? "dunst" --> hasBorder False,
     resource =? "oblogout" --> doFullFloat,
-    resource =? "gxmessage" --> doFloat <+> placeHook (fixed (0.5, 0.5)),
+    resource =? "gxmessage" --> doCenterFloat,
     resource =? "onboard" --> doFloat,
-    resource =? "xmessage" --> doFloat,
+    resource =? "xmessage" --> doCenterFloat,
     className =? "Tor Browser" --> doFloat,
     className =? "code-oss" --> viewShift (code),
     className =? "jetbrains-idea" --> viewShift (code),
@@ -249,8 +277,7 @@ myHooks = manageSpawn <+> composeAll
     resource =? "pavucontrol" --> doFloat <+> placeHook (fixed (0.5, 0.5)),
     title =? "win0" --> doFloat,
     className =? "Xfce4-appfinder" --> doRectFloat (W.RationalRect 0 (1/50) (1/2) (1/2)),
-    --resource =? "xfce4-appfinder" --> (/= focused) --> kill
-    title =? "Microsoft Teams Notification" --> doSideFloat NE -- <+> doF focusDown
+    title =? "Microsoft Teams Notification" --> doSideFloat NE
   ]
   where
     viewShift = doF . liftM2 (.) W.greedyView W.shift
@@ -286,11 +313,12 @@ closeOnFocusLostLogHook clsName = do
         tryCast (StateExtension val) = May.fromMaybe initialValue $ Type.cast val
         tryCast _ = NoFocus
 
-myLogHook xmproc0 xmproc1 xmproc2 = do
+-- myLogHook xmproc0 xmproc1 xmproc2 = do
+myLogHook xmproc0 = do
   fadeInactiveLogHook 1
   dynamicLogWithPP $ xmobarPP
     {
-      ppOutput = \x -> hPutStrLn xmproc0 x >> hPutStrLn xmproc1 x >> hPutStrLn xmproc2 x,
+      ppOutput = \x -> hPutStrLn xmproc0 x, -- >> hPutStrLn xmproc1 x >> hPutStrLn xmproc2 x,
       ppCurrent = xmobarColor "yellow" "" . wrap "" "",
       ppTitle   = xmobarColor "gray"  "" . shorten 70,
       ppUrgent  = xmobarColor "red" "yellow",
@@ -315,8 +343,11 @@ mySort = getSortByXineramaRule
 main = do
   n <- countScreens
   xmproc0 <- spawnPipe "xmobar -x 0 $HOME/.xmonad/xmobar.hs"
-  xmproc1 <- spawnPipe "xmobar -x 1 $HOME/.xmonad/xmobar.hs"
-  xmproc2 <- spawnPipe "xmobar -x 2 $HOME/.xmonad/xmobar.hs"
+  -- xmproc1 <- spawnPipe "xmobar -x 1 $HOME/.xmonad/xmobar.hs"
+  -- xmproc2 <- spawnPipe "xmobar -x 2 $HOME/.xmonad/xmobar.hs"
+  -- xmproc0 <- spawnPipe "xmobar -x 0 $HOME/.xmonad/xmobar/apps.hs"
+  -- xmproc1 <- spawnPipe "xmobar -x 0 $HOME/.xmonad/xmobar/workspaces.hs"
+  -- xmproc2 <- spawnPipe "xmobar -x 0 $HOME/.xmonad/xmobar/status.hs"
   xmonad $ docks . setEwmhWorkspaceSort mySort . ewmhFullscreen . ewmh $ Hacks.javaHack (def {
     modMask = mod4Mask,
     terminal = "tilix",
@@ -330,7 +361,7 @@ main = do
     layoutHook =  smartBorders (lessBorders FocusedOnly (avoidStruts myBaseLayout)),
     manageHook = manageDocks <+> myHooks,
     handleEventHook = myEventHook,
-    logHook = myLogHook xmproc0 xmproc1 xmproc2
+    logHook = myLogHook xmproc0 -- xmproc1 xmproc2
   } `additionalKeysP` [
       ("M-l", spawn "slock"),
       ("M-r", spawn "rofi -combi-modi window,drun -theme android_notification -font \"hack 10\" -show combi"),

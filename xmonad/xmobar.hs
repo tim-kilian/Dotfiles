@@ -11,7 +11,9 @@ Config {
     borderColor = "#34363d",
     bgColor = "#20222A", -- #34363d
     fgColor = "#E0E0E0",
-    position = TopW L 100,
+    -- position = TopW L 100,
+    -- position = Static {xpos = 16, ypos = 16, width = 2260, height = 30},
+    position = Static {xpos = 16, ypos = 16, width = 1620, height = 30},
     lowerOnStart = True,
     hideOnStart = False,
     allDesktops = True,
