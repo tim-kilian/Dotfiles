@@ -67,5 +67,5 @@ Config {
     ],
     sepChar = "%",
     alignSep = "}{",
-    template = "  <action=`xfce4-appfinder --disable-server` button=1><icon=arch.xpm/></action>   %UnsafeStdinReader% } %date% { %cpu%   %memory%   %default:Master%   %battery%    <action=`oblogout` button=1><fn=1><raw=1:/></fn></action>   "
+    template = "  <action=`xfce4-appfinder --disable-server` button=1><icon=arch.xpm/></action>   %UnsafeStdinReader% } { %cpu%   %memory%   %default:Master%   %battery%    <action=`oblogout` button=1><fn=1><raw=1:/></fn></action>     %date%   "
 }

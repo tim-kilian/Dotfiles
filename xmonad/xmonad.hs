@@ -1,8 +1,21 @@
 import XMonad
 import XMonad.Core
+import XMonad.Layout.Accordion
+import XMonad.Layout.Cross
+import XMonad.Layout.DecorationAddons
+import XMonad.Layout.ImageButtonDecoration
+import XMonad.Layout.TwoPanePersistent
+import XMonad.Layout.TabBarDecoration
+import XMonad.Layout.ResizeScreen
+import XMonad.Layout.DecorationMadness
+import XMonad.Layout.Dishes
+import XMonad.Layout.OneBig
+import XMonad.Layout.Circle
+import XMonad.Layout.Roledex
 import XMonad.Layout.NoBorders
 import XMonad.Layout.Spacing
 import XMonad.Layout.ResizableTile
+import XMonad.Layout.LayoutBuilder
 import XMonad.Layout.BoringWindows (boringWindows, focusDown)
 import XMonad.Layout.Gaps
 import XMonad.Layout.Renamed (renamed, Rename(Replace))
@@ -11,9 +24,11 @@ import XMonad.Layout.Tabbed
 import XMonad.Layout.SimplestFloat
 import XMonad.Layout.Spiral
 import XMonad.Layout.ThreeColumns
+import XMonad.Layout.TrackFloating
 import XMonad.Layout.CenteredMaster
 import XMonad.Layout.IndependentScreens
 import XMonad.Layout.GridVariants (Grid(Grid))
+import XMonad.Layout.MagicFocus
 import XMonad.Layout.Minimize
 import XMonad.Layout.MultiToggle (mkToggle, single, EOT(EOT), (??))
 import XMonad.Layout.MultiToggle.Instances (StdTransformers(NBFULL, MIRROR, NOBORDERS))
@@ -21,6 +36,8 @@ import XMonad.Layout.MouseResizableTile
 import XMonad.Layout.PerWorkspace
 import XMonad.Layout.Reflect
 import XMonad.Layout.WindowArranger (windowArrange, WindowArrangerMsg(..))
+import XMonad.Layout.WindowSwitcherDecoration
+import XMonad.Layout.DraggingVisualizer
 import XMonad.Hooks.Place
 import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.ManageHelpers
@@ -41,6 +58,8 @@ import XMonad.Actions.MouseResize
 import XMonad.Actions.MouseGestures
 import Graphics.X11.ExtraTypes.XF86
 
+import XMonad.Util.Image
+
 import qualified XMonad.Layout.Magnifier as Mag
 import qualified XMonad.StackSet as W
 import qualified Data.Map as M
@@ -52,26 +71,43 @@ import qualified XMonad.Util.Hacks as Hacks
 
 import Control.Monad (replicateM_, liftM2)
 
+import Data.List
+
 import System.IO
 import System.Exit
 
 myKeys conf@(XConfig {modMask = mod4Mask}) = M.fromList $ [
     ((mod4Mask .|. shiftMask, xK_Return), spawn $ XMonad.terminal conf),
+    ((mod4Mask .|. controlMask, xK_Return), spawn "alacritty"),
     ((mod4Mask .|. shiftMask, xK_c), kill),
     ((mod4Mask, xK_space), sendMessage NextLayout),
     ((mod4Mask .|. shiftMask, xK_space), setLayout $ XMonad.layoutHook conf),
     ((mod4Mask, xK_n), refresh),
-    ((mod4Mask, xK_Tab), nextLayout),
-    ((mod4Mask .|. shiftMask, xK_Tab), prevLayout),
-    ((mod1Mask, xK_Tab), windows W.focusDown),
-    ((mod1Mask .|. shiftMask, xK_Tab), windows W.focusUp),
-    ((mod4Mask, xK_j), windows W.focusDown),
-    ((mod4Mask, xK_k), windows W.focusUp),
+    ((mod4Mask, xK_Tab), windows W.focusDown),
+    ((mod4Mask .|. shiftMask, xK_Tab), windows W.focusUp),
+
+    ((mod1Mask, xK_l), spawn "slock"),
+
+    ((mod4Mask, xK_j), windows W.swapDown),
+    ((mod4Mask, xK_k), windows W.swapUp),
+    ((mod4Mask, xK_s), sendMessage  Arrange),
+    ((mod4Mask .|. shiftMask, xK_s), sendMessage  DeArrange),
+    ((mod4Mask .|. shiftMask, xK_h), sendMessage (MoveLeft 10)),
+    ((mod4Mask .|. shiftMask, xK_l), sendMessage (MoveRight 10)),
+    ((mod4Mask .|. shiftMask, xK_j), sendMessage (MoveDown 10)),
+    ((mod4Mask .|. shiftMask, xK_k), sendMessage (MoveUp 10)),
+    ((mod4Mask .|. controlMask, xK_h), sendMessage (IncreaseLeft 10)),
+    ((mod4Mask .|. controlMask, xK_l), sendMessage (IncreaseRight 10)),
+    ((mod4Mask .|. controlMask, xK_j), sendMessage (IncreaseDown 10)),
+    ((mod4Mask .|. controlMask, xK_k), sendMessage (IncreaseUp 10)),
+    ((mod4Mask .|. controlMask .|. shiftMask, xK_h), sendMessage (DecreaseLeft 10)),
+    ((mod4Mask .|. controlMask .|. shiftMask, xK_l), sendMessage (DecreaseRight 10)),
+    ((mod4Mask .|. controlMask .|. shiftMask, xK_j), sendMessage (DecreaseDown 10)),
+    ((mod4Mask .|. controlMask .|. shiftMask, xK_k), sendMessage (DecreaseUp 10)),
+
     ((mod4Mask, xK_m), withFocused minimizeWindow),
     ((mod4Mask .|. shiftMask, xK_m), withLastMinimized maximizeWindowAndFocus),
     ((mod4Mask, xK_Return), windows W.swapMaster),
-    ((mod4Mask .|. shiftMask, xK_j), windows W.swapDown),
-    ((mod4Mask .|. shiftMask, xK_k), windows W.swapUp),
     ((mod4Mask, xK_u), sendMessage Shrink),
     ((mod4Mask .|. shiftMask, xK_u), sendMessage ShrinkSlave),
     ((mod4Mask, xK_i), sendMessage Expand),
@@ -136,7 +172,7 @@ myStartupHook = do
   -- spawn "tint2"
   spawn "volctl"
   spawn "cbatticon"
-  spawn "trayer --tint 0x20222a --alpha 0 --transparent true --expand true --SetDockType true --iconspacing 3 --margin 16 --widthtype pixel --distance 16 --width 240 --height 30 --padding 8 --edge top --align right"
+  spawn "trayer --tint 0x20222a --alpha 0 --transparent true --expand true --SetDockType true --iconspacing 3 --margin 16 --widthtype pixel --distance 16 --width 250 --height 30 --padding 8 --edge top --align right"
   spawn "onboard"
   spawn "xinput set-prop \"SynPS/2 Synaptics TouchPad\" \"libinput Tapping Enabled\" 1"
   spawn "xinput set-prop \"SynPS/2 Synaptics TouchPad\" \"libinput Natural Scrolling Enabled\" 1"
@@ -151,6 +187,21 @@ myStartupHook = do
 mySpacing i = spacingRaw False (Border i i i i) True (Border i i i i) True
 mySpacing' i = spacingRaw True (Border i i i i) True (Border i i i i) True
 
+myTheme = def {
+    windowTitleIcons = [
+      (menuButton, CenterLeft 10),
+      (closeButton, CenterRight 10)
+      -- (maxiButton, CenterRight 30),
+      -- (miniButton, CenterRight 50)
+    ],
+    fontName = "xft:Roboto Nerd Font:regular:pixelsize=11",
+    activeColor = "#3e445e",
+    inactiveColor = "#292d3e",
+    activeBorderColor = "#292d3e",
+    inactiveBorderColor = "#292d3e",
+    activeTextColor = "#ffffff",
+    inactiveTextColor = "#d0d0d0"
+  }
 
 tall = renamed [Replace "tall"]
     $ minimize
@@ -158,7 +209,51 @@ tall = renamed [Replace "tall"]
     $ limitWindows 12
     $ mySpacing 8
     -- $ gaps [(D,72)]
+    -- $ windowSwitcherDecorationWithImageButtons shrinkText myTheme (draggingVisualizer $ mouseResizableTile)
+    -- $ tabBar shrinkText myTheme Top (resizeVertical 20 $ mouseResizableTile )
     $ mouseResizableTile
+accordion = renamed [Replace "accordion"]
+    $ minimize
+    $ Mag.magnifierOff
+    $ limitWindows 12
+    $ mySpacing 12
+    -- $ gaps [(D,72)]
+    $ accordionDefaultResizable shrinkText myTheme
+circle = renamed [Replace "circle"]
+    $ minimize
+    $ Mag.magnifierOff
+    $ limitWindows 12
+    $ mySpacing 8
+    -- $ gaps [(D,72)]
+    $ Circle
+dishes = renamed [Replace "dishes"]
+    $ minimize
+    $ Mag.magnifierOff
+    $ limitWindows 12
+    $ mySpacing 8
+    -- $ gaps [(D,72)]
+    $ Dishes 2 (1/5)
+oneBig = renamed [Replace "oneBig"]
+    $ minimize
+    $ Mag.magnifierOff
+    $ limitWindows 12
+    $ mySpacing 8
+    -- $ gaps [(D,72)]
+    $ OneBig (3/4) (3/4)
+twoPane = renamed [Replace "twoPane"]
+    $ minimize
+    $ Mag.magnifierOff
+    $ limitWindows 12
+    $ mySpacing 8
+    -- $ gaps [(D,72)]
+    $ TwoPanePersistent Nothing (3/100) (1/2)
+roledex = renamed [Replace "roledex"]
+    $ minimize
+    $ Mag.magnifierOff
+    $ limitWindows 12
+    $ mySpacing 8
+    -- $ gaps [(D,72)]
+    $ Roledex
 monocle = renamed [Replace "monocle"]
     $ minimize
     $ Mag.magnifierOff
@@ -169,7 +264,8 @@ monocle = renamed [Replace "monocle"]
 floats = renamed [Replace "floats"]
     $ minimize
     $ Mag.magnifierOff
-    $ limitWindows 20 simplestFloat
+    $ limitWindows 20
+    $ simplestFloat
 grid = renamed [Replace "grid"]
     $ minimize
     $ Mag.magnifierOff
@@ -207,19 +303,13 @@ tabs = renamed [Replace "tabs"]
     $ noBorders
     $ minimize
     $ Mag.magnifierOff
-    $ tabbed shrinkText def {
-        fontName = "xft:Mononoki Nerd Font:regular:pixelsize=11",
-        activeColor = "#292d3e",
-        inactiveColor = "#3e445e",
-        activeBorderColor = "#292d3e",
-        inactiveBorderColor = "#292d3e",
-        activeTextColor = "#ffffff",
-        inactiveTextColor = "#d0d0d0"
-      }
+    $ gaps [(D,16), (U,16), (L,16), (R,16)]
+    $ tabbed shrinkText (myTheme { windowTitleIcons = [] })
 
 myBaseLayout = screenCornerLayoutHook
     $ mouseResize
     $ boringWindows
+    $ trackFloating
     $ windowArrange
     $ T.toggleLayouts floats
     $ mkToggle (NBFULL ?? NOBORDERS ?? EOT)
@@ -229,7 +319,7 @@ myBaseLayout = screenCornerLayoutHook
     $ onWorkspace (myWorkspaces !! 2) chatLayouts
     $ allLayouts
   where
-    allLayouts = tall ||| threeColMid ||| monocle
+    allLayouts = tall ||| threeColMid ||| circle
       -- ||| floats
       -- ||| grid
       -- ||| spirals
@@ -369,7 +459,7 @@ main = do
     handleEventHook = myEventHook,
     logHook = myLogHook xmproc0 -- xmproc1 xmproc2
   } `additionalKeysP` [
-      ("M-l", spawn "slock"),
+      -- ("M-l", spawn "slock"),
       ("M-r", spawn "rofi -combi-modi window,drun -theme android_notification -font \"hack 10\" -show combi"),
       ("M-p", spawn "dmenu_run -fn \"xft:Roboto:size=15\" -y 1"),
       --("<Escape>", spawn "killall plank"),
@@ -377,12 +467,67 @@ main = do
       ("<Print>", spawn "flameshot gui -p ~/Pictures/Screenshots/"),
       ("M-<Print>", spawn "flameshot screen -p ~/Pictures/Screenshots/"),
       ("M-e", spawn "nemo"),
+      ("M-b", spawn "onboard"),
       ("M-@", spawn "onboard"),
       ("M-S-e", spawn "gedit"),
       ("M-S-p", spawn "xlayoutdisplay -d 108"),
       ("M-S-n", spawn "nitrogen --restore"),
       ("M-S-ß", xmessage help)
     ])
+
+convertToBool = map (map (== 1))
+
+menuButton = convertToBool [
+    [1,1,1,1,1,1,1,1,1,1],
+    [1,1,1,1,1,1,1,1,1,1],
+    [1,1,0,0,0,0,0,0,1,1],
+    [1,1,0,0,0,0,0,0,1,1],
+    [1,1,1,1,1,1,1,1,1,1],
+    [1,1,1,1,1,1,1,1,1,1],
+    [1,1,1,1,1,1,1,1,1,1],
+    [1,1,1,1,1,1,1,1,1,1],
+    [1,1,1,1,1,1,1,1,1,1],
+    [1,1,1,1,1,1,1,1,1,1]
+  ]
+
+miniButton = convertToBool [
+    [0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0],
+    [1,1,1,1,1,1,1,1,1,1],
+    [1,1,1,1,1,1,1,1,1,1]
+  ]
+
+maxiButton = convertToBool [
+    [1,1,1,1,1,1,1,1,1,1],
+    [1,1,1,1,1,1,1,1,1,1],
+    [1,1,0,0,0,0,0,0,1,1],
+    [1,1,0,0,0,0,0,0,1,1],
+    [1,1,0,0,0,0,0,0,1,1],
+    [1,1,0,0,0,0,0,0,1,1],
+    [1,1,0,0,0,0,0,0,1,1],
+    [1,1,0,0,0,0,0,0,1,1],
+    [1,1,1,1,1,1,1,1,1,1],
+    [1,1,1,1,1,1,1,1,1,1]
+  ]
+
+closeButton = convertToBool [
+    [1,1,0,0,0,0,0,0,1,1],
+    [1,1,1,0,0,0,0,1,1,1],
+    [0,1,1,1,0,0,1,1,1,0],
+    [0,0,1,1,1,1,1,1,0,0],
+    [0,0,0,1,1,1,1,0,0,0],
+    [0,0,0,1,1,1,1,0,0,0],
+    [0,0,1,1,1,1,1,1,0,0],
+    [0,1,1,1,0,0,1,1,1,0],
+    [1,1,1,0,0,0,0,1,1,1],
+    [1,1,0,0,0,0,0,0,1,1]
+  ]
 
 help = unlines ["The modifier key is 'Mod'. Default keybindings:",
     "",
