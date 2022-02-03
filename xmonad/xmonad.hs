@@ -47,8 +47,10 @@ import XMonad.Hooks.FadeInactive
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.SetWMName
 import XMonad.Hooks.ScreenCorners
+
 import XMonad.Actions.SpawnOn
 import XMonad.Actions.Minimize
+import XMonad.Actions.FloatSnap
 import XMonad.Util.WorkspaceCompare (getSortByXineramaRule, getSortByIndex)
 import XMonad.Util.EZConfig
 import XMonad.Util.Ungrab
@@ -62,6 +64,7 @@ import Graphics.X11.ExtraTypes.XF86
 import XMonad.Util.Image
 
 import qualified XMonad.Layout.Magnifier as Mag
+import qualified XMonad.Hooks.InsertPosition as InsertPosition
 import qualified XMonad.StackSet as W
 import qualified Data.Map as M
 import qualified Data.Maybe as May
@@ -121,9 +124,10 @@ myKeys conf@(XConfig {modMask = mod4Mask}) = M.fromList $ [
     ((mod4Mask .|. shiftMask, xK_Right), shiftToNext),
     ((mod4Mask, xK_Left), prevWS),
     ((mod4Mask .|. shiftMask, xK_Left), shiftToPrev),
-    ((mod4Mask .|. controlMask, xK_x), sendMessage $ MT.Toggle REFLECTX),
-    ((mod4Mask .|. controlMask, xK_y), sendMessage $ MT.Toggle REFLECTY),
+    ((mod4Mask, xK_x), sendMessage $ MT.Toggle REFLECTX),
+    ((mod4Mask, xK_y), sendMessage $ MT.Toggle REFLECTY),
     ((mod4Mask, xK_o), sendMessage Mag.Toggle),
+    ((mod4Mask, xK_b), sendMessage ToggleStruts),
     ((mod4Mask, xK_plus), sendMessage Mag.MagnifyMore),
     ((mod4Mask, xK_minus), sendMessage Mag.MagnifyLess),
     ((0, xF86XK_AudioMute), spawn "amixer set Master 'toggle'"),
@@ -202,6 +206,8 @@ myTheme = def {
 tall = renamed [Replace "tall"]
     $ minimize
     $ Mag.magnifierOff
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
     $ limitWindows 12
     $ mySpacing 8
     -- $ gaps [(D,72)]
@@ -211,6 +217,8 @@ tall = renamed [Replace "tall"]
 accordion = renamed [Replace "accordion"]
     $ minimize
     $ Mag.magnifierOff
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
     $ limitWindows 12
     $ mySpacing 12
     -- $ gaps [(D,72)]
@@ -218,6 +226,8 @@ accordion = renamed [Replace "accordion"]
 circle = renamed [Replace "circle"]
     $ minimize
     $ Mag.magnifierOff
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
     $ limitWindows 12
     $ mySpacing 8
     -- $ gaps [(D,72)]
@@ -225,6 +235,8 @@ circle = renamed [Replace "circle"]
 dishes = renamed [Replace "dishes"]
     $ minimize
     $ Mag.magnifierOff
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
     $ limitWindows 12
     $ mySpacing 8
     -- $ gaps [(D,72)]
@@ -232,13 +244,17 @@ dishes = renamed [Replace "dishes"]
 oneBig = renamed [Replace "oneBig"]
     $ minimize
     $ Mag.magnifierOff
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
     $ limitWindows 12
     $ mySpacing 8
     -- $ gaps [(D,72)]
-    $ OneBig (3/4) (3/4)
+    $ OneBig (3/4) (3/5)
 twoPane = renamed [Replace "twoPane"]
     $ minimize
     $ Mag.magnifierOff
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
     $ limitWindows 12
     $ mySpacing 8
     -- $ gaps [(D,72)]
@@ -246,6 +262,8 @@ twoPane = renamed [Replace "twoPane"]
 roledex = renamed [Replace "roledex"]
     $ minimize
     $ Mag.magnifierOff
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
     $ limitWindows 12
     $ mySpacing 8
     -- $ gaps [(D,72)]
@@ -253,6 +271,8 @@ roledex = renamed [Replace "roledex"]
 monocle = renamed [Replace "monocle"]
     $ minimize
     $ Mag.magnifierOff
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
     $ noBorders
     $ mySpacing 8
     -- $ gaps [(D,72)]
@@ -260,11 +280,15 @@ monocle = renamed [Replace "monocle"]
 floats = renamed [Replace "floats"]
     $ minimize
     $ Mag.magnifierOff
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
     $ limitWindows 20
     $ simplestFloat
 grid = renamed [Replace "grid"]
     $ minimize
     $ Mag.magnifierOff
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
     $ limitWindows 12
     $ mySpacing 8
     $ mkToggle (single MIRROR)
@@ -272,11 +296,15 @@ grid = renamed [Replace "grid"]
 spirals = renamed [Replace "spirals"]
     $ minimize
     $ Mag.magnifierOff
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
     $ mySpacing 8
     $ spiral (6/7)
 threeCol = renamed [Replace "threeCol"]
     $ minimize
     $ Mag.magnifierOff
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
     $ limitWindows 7
     $ mySpacing 8
     -- $ gaps [(D,72)]
@@ -284,6 +312,8 @@ threeCol = renamed [Replace "threeCol"]
 threeColMid = renamed [Replace "threeColMid"]
     $ minimize
     $ Mag.magnifierOff
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
     $ limitWindows 7
     $ mySpacing 8
     -- $ gaps [(D,72)]
@@ -291,6 +321,8 @@ threeColMid = renamed [Replace "threeColMid"]
 threeRow = renamed [Replace "threeRow"]
     $ minimize
     $ Mag.magnifierOff
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
     $ limitWindows 7
     $ mySpacing 8
     $ Mirror
@@ -299,6 +331,8 @@ tabs = renamed [Replace "tabs"]
     $ noBorders
     $ minimize
     $ Mag.magnifierOff
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
     $ gaps [(D,16), (U,16), (L,16), (R,16)]
     $ tabbed shrinkText (myTheme { windowTitleIcons = [] })
 
@@ -309,18 +343,20 @@ myBaseLayout = screenCornerLayoutHook
     $ windowArrange
     $ T.toggleLayouts floats
     $ mkToggle (NBFULL ?? NOBORDERS ?? EOT)
-    $ mkToggle (single REFLECTX)
-    $ mkToggle (single REFLECTY)
     $ onWorkspace (myWorkspaces !! 1) codeLayouts
     $ onWorkspace (myWorkspaces !! 2) chatLayouts
+    $ onWorkspace (myWorkspaces !! 5) youtubeLayouts
+    $ onWorkspace (myWorkspaces !! 8) settingsLayouts
     $ allLayouts
   where
-    allLayouts = tall ||| threeColMid ||| circle
+    allLayouts = tall ||| twoPane ||| threeColMid ||| oneBig ||| dishes
       -- ||| floats
       -- ||| grid
       -- ||| spirals
     codeLayouts = tabs
     chatLayouts = tall
+    youtubeLayouts = oneBig ||| monocle
+    settingsLayouts = circle ||| grid
 
 data FocusedOnly = FocusedOnly
   deriving (Show, Read)
@@ -350,7 +386,7 @@ toggleFull = withFocused (\windowId -> do
 
 doLowerStack = ask >>= \w -> liftX $ withDisplay $ \dpy -> io (lowerWindow dpy w) >> mempty
 
-myHooks = manageSpawn <+> composeAll
+myHooks = manageSpawn <+> InsertPosition.insertPosition InsertPosition.Below InsertPosition.Newer <+> composeAll
   [
     isDialog --> doFloat <+> placeHook (fixed (0.5, 0.5)),
     isFullscreen --> doFullFloat,
@@ -376,6 +412,7 @@ myHooks = manageSpawn <+> composeAll
     web = myWorkspaces!!0
     code = myWorkspaces!!1
     chat = myWorkspaces!!2
+    youtube = myWorkspaces!!5
 
 when p s  = if p then s else pure ()
 data Focus = NoFocus | Focus Window deriving (Eq, Read, Show, Typeable)
@@ -406,20 +443,37 @@ closeOnFocusLostLogHook clsName = do
         tryCast _ = NoFocus
 
 myWorkspaceNames = [
-    ("1", "<fn=3>\xf269 </fn>¹"),
-    ("2", "<fn=3>\xf667 </fn>²"),
-    ("3", "<fn=3>\xf687 </fn>³"),
-    ("4", "<fn=3>\xe795 </fn>⁴"),
-    ("5", "<fn=3>\xf718 </fn>⁵"),
-    ("6", "<fn=3>\xf7e8 </fn>⁶"),
-    ("7", "<fn=3>\xf001 </fn>⁷"),
-    ("8", "<fn=3>\xf7b3 </fn>⁸"),
-    ("9", "<fn=3>\xf013 </fn>⁹")
+    ("1", "¹ <fn=3>\xf269 </fn>"),
+    ("2", "² <fn=3>\xf667 </fn>"),
+    ("3", "³ <fn=3>\xf687 </fn>"),
+    ("4", "⁴ <fn=3>\xe795 </fn>"),
+    ("5", "⁵ <fn=3>\xf718 </fn>"),
+    ("6", "⁶ <fn=3>\xf16a </fn>"),
+    ("7", "⁷ <fn=3>\xf001 </fn>"),
+    ("8", "⁸ <fn=3>\xf7b3 </fn>"),
+    ("9", "⁹ <fn=3>\xf013 </fn>")
   ]
 
-translateWorkspaces val
-  | not (null ([ key | (key,name) <- myWorkspaceNames, key==val])) = May.fromMaybe val (lookup val myWorkspaceNames)
-  | otherwise = val
+myLayoutImages = [
+    ("tall", "tall"),
+    ("twoPane", "two-pane"),
+    ("threeColMid", "threeColMid"),
+    ("oneBig", "one-big"),
+    ("dishes", "dishes"),
+    ("tabs", "tab"),
+    ("monocle", "full"),
+    ("circle", "circle"),
+    ("grid", "grid")
+  ]
+
+translateMap val mapList defaultVal
+  | not (null ([ key | (key,name) <- mapList, key==val])) = May.fromMaybe val (lookup val mapList)
+  | otherwise = defaultVal
+
+getIcon s = "<icon="++s++".xpm/>"
+
+translateWorkspaces val = translateMap val myWorkspaceNames val
+translateLayouts val = getIcon (translateMap val myLayoutImages "unknown")
 
 clickableWrap i = xmobarAction ("xdotool key super+" ++ show (i+1)) "1"
 
@@ -446,6 +500,7 @@ myLogHook xmproc0 = do
       ppTitle   = xmobarColor "gray"  "" . shorten 70,
       ppUrgent  = xmobarColor "red" "yellow",
       --ppLayout = const (""),
+      ppLayout = xmobarColor "white" "" . translateLayouts,
       ppExtras  = [windowCount],
       ppSep = "   ",
       ppWsSep = "  ",
@@ -491,7 +546,7 @@ main = do
       ("<Print>", spawn "flameshot gui -p ~/Pictures/Screenshots/"),
       ("M-<Print>", spawn "flameshot screen -p ~/Pictures/Screenshots/"),
       ("M-e", spawn "nemo"),
-      ("M-b", spawn "onboard"),
+      ("M-S-b", spawn "onboard"),
       ("M-@", spawn "onboard"),
       ("M-S-e", spawn "gedit"),
       ("M-S-p", spawn "xlayoutdisplay -d 108"),
