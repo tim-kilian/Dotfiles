@@ -1,5 +1,6 @@
 import XMonad
 import XMonad.Core
+import XMonad.Prelude ((<&>), (>=>))
 import XMonad.Layout.Accordion
 import XMonad.Layout.Cross
 import XMonad.Layout.DecorationAddons
@@ -48,7 +49,7 @@ import XMonad.Hooks.SetWMName
 import XMonad.Hooks.ScreenCorners
 import XMonad.Actions.SpawnOn
 import XMonad.Actions.Minimize
-import XMonad.Util.WorkspaceCompare
+import XMonad.Util.WorkspaceCompare (getSortByXineramaRule, getSortByIndex)
 import XMonad.Util.EZConfig
 import XMonad.Util.Ungrab
 import XMonad.Util.Run
@@ -144,13 +145,8 @@ xmobarEscape = concatMap doubleLts
   where
     doubleLts x = [x]
 
-myWorkspaces = clickable . map xmobarEscape $ ["\xf015", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
-  where
-    clickable l =
-      [
-        "<action=xdotool key super+" ++ show n ++ "><fn=3>" ++ ws ++ "</fn></action>" | (i,ws) <- zip [1..10] l,
-        let n = i
-      ]
+myWorkspaces = map xmobarEscape ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+
 
 myStartupHook = do
   --spawn "killall conky"
@@ -349,7 +345,7 @@ toggleFull = withFocused (\windowId -> do
    then do
        withFocused $ windows . W.sink
    else do
-       withFocused $  windows . (flip W.float $ W.RationalRect 0 0 1 1)
+       withFocused $  windows . flip W.float (W.RationalRect 0 0 1 1)
 })
 
 doLowerStack = ask >>= \w -> liftX $ withDisplay $ \dpy -> io (lowerWindow dpy w) >> mempty
@@ -409,13 +405,44 @@ closeOnFocusLostLogHook clsName = do
         tryCast (StateExtension val) = May.fromMaybe initialValue $ Type.cast val
         tryCast _ = NoFocus
 
+myWorkspaceNames = [
+    ("1", "<fn=3>\xf269 </fn>¹"),
+    ("2", "<fn=3>\xf667 </fn>²"),
+    ("3", "<fn=3>\xf687 </fn>³"),
+    ("4", "<fn=3>\xe795 </fn>⁴"),
+    ("5", "<fn=3>\xf718 </fn>⁵"),
+    ("6", "<fn=3>\xf7e8 </fn>⁶"),
+    ("7", "<fn=3>\xf001 </fn>⁷"),
+    ("8", "<fn=3>\xf7b3 </fn>⁸"),
+    ("9", "<fn=3>\xf013 </fn>⁹")
+  ]
+
+translateWorkspaces val
+  | not (null ([ key | (key,name) <- myWorkspaceNames, key==val])) = May.fromMaybe val (lookup val myWorkspaceNames)
+  | otherwise = val
+
+clickableWrap i = xmobarAction ("xdotool key super+" ++ show (i+1)) "1"
+
+getWsIndex = do
+    wSort <- getSortByIndex
+    spaces <- gets (map W.tag . wSort . W.workspaces . windowset)
+    return $ flip elemIndex spaces
+
+getClickable = getWsIndex <&> \idx s w -> maybe id clickableWrap (idx (W.tag w)) s
+
+clickablePP pp = getClickable <&> \ren -> pp{ ppRename = ppRename pp >=> ren }
+
 -- myLogHook xmproc0 xmproc1 xmproc2 = do
 myLogHook xmproc0 = do
   fadeInactiveLogHook 1
-  dynamicLogWithPP $ xmobarPP
+  clickablePP xmobarPP
     {
       ppOutput = \x -> hPutStrLn xmproc0 x, -- >> hPutStrLn xmproc1 x >> hPutStrLn xmproc2 x,
-      ppCurrent = xmobarColor "yellow" "" . wrap "" "",
+      ppRename = pure . translateWorkspaces,
+      ppCurrent = xmobarColor "#389dff" "" . wrap "" "",
+      ppVisibleNoWindows = Just (xmobarColor "yellow" "" . wrap "" ""),
+      ppHidden = xmobarColor "white" "" . wrap "" "",
+      ppHiddenNoWindows = xmobarColor "#767676" "" . wrap "" "",
       ppTitle   = xmobarColor "gray"  "" . shorten 70,
       ppUrgent  = xmobarColor "red" "yellow",
       --ppLayout = const (""),
@@ -423,11 +450,8 @@ myLogHook xmproc0 = do
       ppSep = "   ",
       ppWsSep = "  ",
       ppOrder  = \(ws:l:t:ex) -> [ws,l]++ex++[t]
-    }
+    } >>= dynamicLogWithPP
   closeOnFocusLostLogHook "Xfce4-appfinder"
-  --gets (W.peek . windowset) >>= liftIO . updateEnv
-  --  where
-  --    updateEnv = spawn "gxmessage test"
 
 windowCount = gets $ Just . show . length . W.integrate' . W.stack . W.workspace . W.current . windowset
 
