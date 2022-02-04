@@ -47,6 +47,7 @@ import XMonad.Hooks.FadeInactive
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.SetWMName
 import XMonad.Hooks.ScreenCorners
+import XMonad.Hooks.RefocusLast (refocusLastLayoutHook, refocusLastWhen, isFloat)
 
 import XMonad.Actions.SpawnOn
 import XMonad.Actions.Minimize
@@ -63,6 +64,7 @@ import Graphics.X11.ExtraTypes.XF86
 
 import XMonad.Util.Image
 
+import qualified XMonad.Layout.Dwindle as Dwindle
 import qualified XMonad.Layout.Magnifier as Mag
 import qualified XMonad.Hooks.InsertPosition as InsertPosition
 import qualified XMonad.StackSet as W
@@ -299,7 +301,7 @@ spirals = renamed [Replace "spirals"]
     $ mkToggle (single REFLECTX)
     $ mkToggle (single REFLECTY)
     $ mySpacing 8
-    $ spiral (6/7)
+    $ Dwindle.Dwindle Dwindle.R Dwindle.CW 1.5 1.1
 threeCol = renamed [Replace "threeCol"]
     $ minimize
     $ Mag.magnifierOff
@@ -334,12 +336,12 @@ tabs = renamed [Replace "tabs"]
     $ mkToggle (single REFLECTX)
     $ mkToggle (single REFLECTY)
     $ gaps [(D,16), (U,16), (L,16), (R,16)]
-    $ tabbed shrinkText (myTheme { windowTitleIcons = [] })
+    $ trackFloating (useTransientFor (tabbed shrinkText (myTheme { windowTitleIcons = [] })))
 
 myBaseLayout = screenCornerLayoutHook
     $ mouseResize
     $ boringWindows
-    $ trackFloating
+    $ refocusLastLayoutHook
     $ windowArrange
     $ T.toggleLayouts floats
     $ mkToggle (NBFULL ?? NOBORDERS ?? EOT)
@@ -356,7 +358,7 @@ myBaseLayout = screenCornerLayoutHook
     codeLayouts = tabs
     chatLayouts = tall
     youtubeLayouts = oneBig ||| monocle
-    settingsLayouts = circle ||| grid
+    settingsLayouts = circle ||| grid ||| spirals
 
 data FocusedOnly = FocusedOnly
   deriving (Show, Read)
@@ -444,10 +446,10 @@ closeOnFocusLostLogHook clsName = do
 
 myWorkspaceNames = [
     ("1", "¹ <fn=3>\xf269 </fn>"),
-    ("2", "² <fn=3>\xf667 </fn>"),
+    ("2", "² <fn=3>\xf7a1 </fn>"),
     ("3", "³ <fn=3>\xf687 </fn>"),
     ("4", "⁴ <fn=3>\xe795 </fn>"),
-    ("5", "⁵ <fn=3>\xf718 </fn>"),
+    ("5", "⁵ <fn=3>\xf1b2 </fn>"),
     ("6", "⁶ <fn=3>\xf16a </fn>"),
     ("7", "⁷ <fn=3>\xf001 </fn>"),
     ("8", "⁸ <fn=3>\xf7b3 </fn>"),
@@ -463,7 +465,8 @@ myLayoutImages = [
     ("tabs", "tab"),
     ("monocle", "full"),
     ("circle", "circle"),
-    ("grid", "grid")
+    ("grid", "grid"),
+    ("spirals", "dwindle")
   ]
 
 translateMap val mapList defaultVal
@@ -512,6 +515,7 @@ windowCount = gets $ Just . show . length . W.integrate' . W.stack . W.workspace
 
 myEventHook e = do
   screenCornerEventHook e
+  refocusLastWhen isFloat e
 
 mySort = getSortByXineramaRule
 
