@@ -23,6 +23,9 @@ import XMonad.Layout.Renamed (renamed, Rename(Replace))
 import XMonad.Layout.LimitWindows (limitWindows, increaseLimit, decreaseLimit)
 import XMonad.Layout.Tabbed
 import XMonad.Layout.SimplestFloat
+import XMonad.Layout.PositionStoreFloat
+import XMonad.Layout.NoFrillsDecoration
+import XMonad.Layout.BorderResize
 import XMonad.Layout.Spiral
 import XMonad.Layout.ThreeColumns
 import XMonad.Layout.TrackFloating
@@ -119,6 +122,7 @@ myKeys conf@(XConfig {modMask = mod4Mask}) = M.fromList $ [
     ((mod4Mask, xK_i), sendMessage Expand),
     ((mod4Mask .|. shiftMask, xK_i), sendMessage ExpandSlave),
     ((mod4Mask, xK_t), withFocused toggleFloat),
+    ((mod4Mask, xK_w), placeFocused (withGaps (16,16,16,16) simpleSmart)),
     ((mod4Mask, xK_f), toggleFull),
     ((mod4Mask, xK_comma), sendMessage (IncMasterN 1)),
     ((mod4Mask, xK_period), sendMessage (IncMasterN (-1))),
@@ -285,7 +289,9 @@ floats = renamed [Replace "floats"]
     $ mkToggle (single REFLECTX)
     $ mkToggle (single REFLECTY)
     $ limitWindows 20
-    $ simplestFloat
+    -- $ simplestFloat
+    $ floatingDeco $ borderResize $ positionStoreFloat
+    where floatingDeco l = noFrillsDeco shrinkText def l
 grid = renamed [Replace "grid"]
     $ minimize
     $ Mag.magnifierOff
@@ -351,14 +357,14 @@ myBaseLayout = screenCornerLayoutHook
     $ onWorkspace (myWorkspaces !! 8) settingsLayouts
     $ allLayouts
   where
-    allLayouts = tall ||| twoPane ||| threeColMid ||| oneBig ||| dishes
+    allLayouts = tall ||| monocle ||| twoPane ||| threeColMid ||| oneBig ||| dishes
       -- ||| floats
       -- ||| grid
       -- ||| spirals
     codeLayouts = tabs
     chatLayouts = tall
     youtubeLayouts = oneBig ||| monocle
-    settingsLayouts = circle ||| grid ||| spirals
+    settingsLayouts = circle ||| grid ||| spirals ||| floats
 
 data FocusedOnly = FocusedOnly
   deriving (Show, Read)
@@ -388,9 +394,10 @@ toggleFull = withFocused (\windowId -> do
 
 doLowerStack = ask >>= \w -> liftX $ withDisplay $ \dpy -> io (lowerWindow dpy w) >> mempty
 
-myHooks = manageSpawn <+> InsertPosition.insertPosition InsertPosition.Below InsertPosition.Newer <+> composeAll
+myHooks = manageSpawn <+> composeAll
   [
-    isDialog --> doFloat <+> placeHook (fixed (0.5, 0.5)),
+    fmap not isDialog --> InsertPosition.insertPosition InsertPosition.End InsertPosition.Newer,
+    isDialog -->  doFloat <+> placeHook (withGaps (16,16,16,16) simpleSmart),
     isFullscreen --> doFullFloat,
     resource =? "desktop_window" --> doIgnore,
     resource =? "plank" --> hasBorder False,
@@ -464,6 +471,7 @@ myLayoutImages = [
     ("dishes", "dishes"),
     ("tabs", "tab"),
     ("monocle", "full"),
+
     ("circle", "circle"),
     ("grid", "grid"),
     ("spirals", "dwindle")
@@ -532,6 +540,7 @@ main = do
     terminal = "tilix",
     borderWidth = 0,
     focusedBorderColor = "#e94e1b",
+    -- focusFollowsMouse = False,
 
     workspaces = myWorkspaces,
     keys = myKeys,
@@ -553,7 +562,7 @@ main = do
       ("M-S-b", spawn "onboard"),
       ("M-@", spawn "onboard"),
       ("M-S-e", spawn "gedit"),
-      ("M-S-p", spawn "xlayoutdisplay -d 108"),
+      ("M-S-p", spawn "xlayoutdisplay -d 108 && nitrogen --restore"),
       ("M-S-n", spawn "nitrogen --restore"),
       ("M-S-ß", xmessage help)
     ])
