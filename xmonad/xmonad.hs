@@ -1,3 +1,7 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+
 import XMonad
 import XMonad.Core
 import XMonad.Prelude ((<&>), (>=>))
@@ -17,6 +21,7 @@ import XMonad.Layout.NoBorders
 import XMonad.Layout.Spacing
 import XMonad.Layout.ResizableTile
 import XMonad.Layout.LayoutBuilder
+import XMonad.Layout.LayoutModifier
 import XMonad.Layout.BoringWindows (boringWindows, focusDown)
 import XMonad.Layout.Gaps
 import XMonad.Layout.Renamed (renamed, Rename(Replace))
@@ -34,8 +39,10 @@ import XMonad.Layout.IndependentScreens
 import XMonad.Layout.GridVariants (Grid(Grid))
 import XMonad.Layout.MagicFocus
 import XMonad.Layout.Minimize
-import XMonad.Layout.MultiToggle (mkToggle, single, EOT(EOT), (??))
-import XMonad.Layout.MultiToggle.Instances (StdTransformers(NBFULL, MIRROR, NOBORDERS))
+import XMonad.Layout.MultiToggle
+import XMonad.Layout.MultiToggle.Instances
+-- import XMonad.Layout.MultiToggle (mkToggle, isToggleActive, single, EOT(EOT), (??))
+-- import XMonad.Layout.MultiToggle.Instances (StdTransformers(NBFULL, MIRROR, NOBORDERS))
 import XMonad.Layout.MouseResizableTile
 import XMonad.Layout.PerWorkspace
 import XMonad.Layout.Reflect
@@ -92,7 +99,7 @@ myKeys conf@(XConfig {modMask = mod4Mask}) = M.fromList $ [
     ((mod4Mask, xK_space), sendMessage NextLayout),
     ((mod4Mask .|. shiftMask, xK_space), setLayout $ XMonad.layoutHook conf),
     ((mod4Mask, xK_n), refresh),
-    ((mod4Mask, xK_Tab), windows W.focusDown),
+    ((mod1Mask, xK_Tab), windows W.focusDown),
     ((mod4Mask .|. shiftMask, xK_Tab), windows W.focusUp),
 
     ((mod1Mask, xK_l), spawn "slock"),
@@ -124,6 +131,8 @@ myKeys conf@(XConfig {modMask = mod4Mask}) = M.fromList $ [
     ((mod4Mask, xK_t), withFocused toggleFloat),
     ((mod4Mask, xK_w), placeFocused (withGaps (16,16,16,16) simpleSmart)),
     ((mod4Mask, xK_f), toggleFull),
+    ((mod4Mask, xK_Tab),  sendMessage (T.Toggle "roledex")),
+    -- ((mod4Mask, xK_v),  sendMessage (MT.Toggle FOLLOW)),
     ((mod4Mask, xK_comma), sendMessage (IncMasterN 1)),
     ((mod4Mask, xK_period), sendMessage (IncMasterN (-1))),
     ((mod4Mask, xK_Right), nextWS),
@@ -193,6 +202,31 @@ myStartupHook = do
 mySpacing i = spacingRaw False (Border i i i i) True (Border i i i i) True
 mySpacing' i = spacingRaw True (Border i i i i) True (Border i i i i) True
 
+
+unmodifyLayout (ModifiedLayout _ x') = x'
+unmodifyMuted (MutedModifiedLayout m) = unmodifyLayout m
+
+data MutedModifiedLayout m l a =
+  MutedModifiedLayout (ModifiedLayout m l a) deriving (Read, Show)
+
+instance (LayoutModifier m Window, LayoutClass l Window, Typeable m) =>
+  LayoutClass (MutedModifiedLayout m l) Window where
+    runLayout (W.Workspace i (MutedModifiedLayout l) ms) r =
+      fmap (fmap MutedModifiedLayout) `fmap` runLayout (W.Workspace i l ms) r
+    doLayout (MutedModifiedLayout l) r s =
+      fmap (fmap MutedModifiedLayout) `fmap` doLayout l r s
+    emptyLayout (MutedModifiedLayout l) r =
+      fmap (fmap MutedModifiedLayout) `fmap` emptyLayout l r
+    handleMessage (MutedModifiedLayout l) =
+      fmap (fmap MutedModifiedLayout) . handleMessage l
+    description (MutedModifiedLayout (ModifiedLayout m l)) = description l
+
+data MyToggles = FOLLOW deriving (Read, Show, Eq, Typeable)
+myToggles = [FOLLOW]
+
+instance Transformer MyToggles Window where
+  transform FOLLOW x k = k (MutedModifiedLayout $ magicFocus x) unmodifyMuted
+
 myTheme = def {
     windowTitleIcons = [
       (menuButton, CenterLeft 10),
@@ -214,6 +248,7 @@ tall = renamed [Replace "tall"]
     $ Mag.magnifierOff
     $ mkToggle (single REFLECTX)
     $ mkToggle (single REFLECTY)
+    -- $ mkToggle1 FOLLOW
     $ limitWindows 12
     $ mySpacing 8
     -- $ gaps [(D,72)]
@@ -225,6 +260,7 @@ accordion = renamed [Replace "accordion"]
     $ Mag.magnifierOff
     $ mkToggle (single REFLECTX)
     $ mkToggle (single REFLECTY)
+    $ mkToggle (single FOLLOW)
     $ limitWindows 12
     $ mySpacing 12
     -- $ gaps [(D,72)]
@@ -234,6 +270,7 @@ circle = renamed [Replace "circle"]
     $ Mag.magnifierOff
     $ mkToggle (single REFLECTX)
     $ mkToggle (single REFLECTY)
+    $ mkToggle (single FOLLOW)
     $ limitWindows 12
     $ mySpacing 8
     -- $ gaps [(D,72)]
@@ -243,6 +280,7 @@ dishes = renamed [Replace "dishes"]
     $ Mag.magnifierOff
     $ mkToggle (single REFLECTX)
     $ mkToggle (single REFLECTY)
+    $ mkToggle (single FOLLOW)
     $ limitWindows 12
     $ mySpacing 8
     -- $ gaps [(D,72)]
@@ -252,6 +290,7 @@ oneBig = renamed [Replace "oneBig"]
     $ Mag.magnifierOff
     $ mkToggle (single REFLECTX)
     $ mkToggle (single REFLECTY)
+    $ mkToggle (single FOLLOW)
     $ limitWindows 12
     $ mySpacing 8
     -- $ gaps [(D,72)]
@@ -261,6 +300,7 @@ twoPane = renamed [Replace "twoPane"]
     $ Mag.magnifierOff
     $ mkToggle (single REFLECTX)
     $ mkToggle (single REFLECTY)
+    $ mkToggle (single FOLLOW)
     $ limitWindows 12
     $ mySpacing 8
     -- $ gaps [(D,72)]
@@ -270,11 +310,13 @@ roledex = renamed [Replace "roledex"]
     $ Mag.magnifierOff
     $ mkToggle (single REFLECTX)
     $ mkToggle (single REFLECTY)
+    $ magicFocus
+    -- $ mkToggle1 MAGICFOCUS
     $ limitWindows 12
     $ mySpacing 8
     -- $ gaps [(D,72)]
     $ Roledex
-monocle = renamed [Replace "monocle"]
+full = renamed [Replace "full"]
     $ minimize
     $ Mag.magnifierOff
     $ mkToggle (single REFLECTX)
@@ -288,15 +330,17 @@ floats = renamed [Replace "floats"]
     $ Mag.magnifierOff
     $ mkToggle (single REFLECTX)
     $ mkToggle (single REFLECTY)
+    $ mkToggle (single FOLLOW)
     $ limitWindows 20
-    -- $ simplestFloat
-    $ floatingDeco $ borderResize $ positionStoreFloat
-    where floatingDeco l = noFrillsDeco shrinkText def l
+    $ simplestFloat
+    -- $ floatingDeco $ borderResize $ positionStoreFloat
+    -- where floatingDeco l = noFrillsDeco shrinkText def l
 grid = renamed [Replace "grid"]
     $ minimize
     $ Mag.magnifierOff
     $ mkToggle (single REFLECTX)
     $ mkToggle (single REFLECTY)
+    $ mkToggle (single FOLLOW)
     $ limitWindows 12
     $ mySpacing 8
     $ mkToggle (single MIRROR)
@@ -306,6 +350,7 @@ spirals = renamed [Replace "spirals"]
     $ Mag.magnifierOff
     $ mkToggle (single REFLECTX)
     $ mkToggle (single REFLECTY)
+    $ mkToggle (single FOLLOW)
     $ mySpacing 8
     $ Dwindle.Dwindle Dwindle.R Dwindle.CW 1.5 1.1
 threeCol = renamed [Replace "threeCol"]
@@ -313,6 +358,7 @@ threeCol = renamed [Replace "threeCol"]
     $ Mag.magnifierOff
     $ mkToggle (single REFLECTX)
     $ mkToggle (single REFLECTY)
+    $ mkToggle (single FOLLOW)
     $ limitWindows 7
     $ mySpacing 8
     -- $ gaps [(D,72)]
@@ -322,6 +368,7 @@ threeColMid = renamed [Replace "threeColMid"]
     $ Mag.magnifierOff
     $ mkToggle (single REFLECTX)
     $ mkToggle (single REFLECTY)
+    $ mkToggle (single FOLLOW)
     $ limitWindows 7
     $ mySpacing 8
     -- $ gaps [(D,72)]
@@ -331,6 +378,7 @@ threeRow = renamed [Replace "threeRow"]
     $ Mag.magnifierOff
     $ mkToggle (single REFLECTX)
     $ mkToggle (single REFLECTY)
+    $ mkToggle (single FOLLOW)
     $ limitWindows 7
     $ mySpacing 8
     $ Mirror
@@ -346,24 +394,28 @@ tabs = renamed [Replace "tabs"]
 
 myBaseLayout = screenCornerLayoutHook
     $ mouseResize
+    -- $ magicFocus
     $ boringWindows
     $ refocusLastLayoutHook
     $ windowArrange
+    $ T.toggleLayouts roledex
     $ T.toggleLayouts floats
     $ mkToggle (NBFULL ?? NOBORDERS ?? EOT)
+    $ onWorkspace (myWorkspaces !! 0) webLayouts
     $ onWorkspace (myWorkspaces !! 1) codeLayouts
     $ onWorkspace (myWorkspaces !! 2) chatLayouts
     $ onWorkspace (myWorkspaces !! 5) youtubeLayouts
     $ onWorkspace (myWorkspaces !! 8) settingsLayouts
     $ allLayouts
   where
-    allLayouts = tall ||| monocle ||| twoPane ||| threeColMid ||| oneBig ||| dishes
+    allLayouts = tall ||| full ||| twoPane ||| threeColMid ||| oneBig ||| dishes
+    webLayouts = tall ||| threeColMid ||| oneBig ||| dishes
       -- ||| floats
       -- ||| grid
       -- ||| spirals
-    codeLayouts = tabs
+    codeLayouts = tabs ||| twoPane
     chatLayouts = tall
-    youtubeLayouts = oneBig ||| monocle
+    youtubeLayouts = oneBig ||| full
     settingsLayouts = circle ||| grid ||| spirals ||| floats
 
 data FocusedOnly = FocusedOnly
@@ -397,7 +449,7 @@ doLowerStack = ask >>= \w -> liftX $ withDisplay $ \dpy -> io (lowerWindow dpy w
 myHooks = manageSpawn <+> composeAll
   [
     fmap not isDialog --> InsertPosition.insertPosition InsertPosition.End InsertPosition.Newer,
-    isDialog -->  doFloat <+> placeHook (withGaps (16,16,16,16) simpleSmart),
+    isDialog --> doFloat <+> placeHook (withGaps (16,16,16,16) simpleSmart),
     isFullscreen --> doFullFloat,
     resource =? "desktop_window" --> doIgnore,
     resource =? "plank" --> hasBorder False,
@@ -470,11 +522,13 @@ myLayoutImages = [
     ("oneBig", "one-big"),
     ("dishes", "dishes"),
     ("tabs", "tab"),
-    ("monocle", "full"),
+    ("full", "full"),
 
     ("circle", "circle"),
     ("grid", "grid"),
-    ("spirals", "dwindle")
+    ("spirals", "dwindle"),
+    ("floats", "floats"),
+    ("roledex", "roledex")
   ]
 
 translateMap val mapList defaultVal
@@ -521,9 +575,15 @@ myLogHook xmproc0 = do
 
 windowCount = gets $ Just . show . length . W.integrate' . W.stack . W.workspace . W.current . windowset
 
+-- currentWorkspace = W.workspace . W.current <$> gets windowset
+
+isToggleActiveInCurrent :: Transformer t Window => t -> X (Maybe Bool)
+isToggleActiveInCurrent t = withWindowSet (isToggleActive t . W.workspace . W.current)
+
 myEventHook e = do
   screenCornerEventHook e
   refocusLastWhen isFloat e
+  -- followOnlyIf (May.fromMaybe False <$> isToggleActiveInCurrent FOLLOW) e
 
 mySort = getSortByXineramaRule
 
