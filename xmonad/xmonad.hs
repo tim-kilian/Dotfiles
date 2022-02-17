@@ -243,6 +243,10 @@ myTheme = def {
     inactiveTextColor = "#d0d0d0"
   }
 
+mrtFraction = 0.7
+mrtDraggerOffset = 10
+mrtDraggerSize = 10
+
 tall = renamed [Replace "tall"]
     $ minimize
     $ Mag.magnifierOff
@@ -409,7 +413,7 @@ myBaseLayout = screenCornerLayoutHook
     $ allLayouts
   where
     allLayouts = tall ||| full ||| twoPane ||| threeColMid ||| oneBig ||| dishes
-    webLayouts = tall ||| threeColMid ||| oneBig ||| dishes
+    webLayouts = oneBig ||| threeColMid ||| dishes ||| tall
       -- ||| floats
       -- ||| grid
       -- ||| spirals
@@ -463,7 +467,7 @@ myHooks = manageSpawn <+> composeAll
     className =? "code-oss" --> viewShift (code),
     className =? "jetbrains-idea" --> viewShift (code),
     className =? "Microsoft Teams - Preview" --> viewShift (chat),
-    resource =? "pavucontrol" --> doFloat <+> placeHook (fixed (0.5, 0.5)),
+    -- resource =? "pavucontrol" --> doFloat <+> placeHook (fixed (0.5, 0.5)),
     title =? "win0" --> doFloat,
     className =? "Xfce4-appfinder" --> doRectFloat (W.RationalRect 0 (1/50) (1/2) (1/2)),
     title =? "Microsoft Teams Notification" --> doSideFloat NE
