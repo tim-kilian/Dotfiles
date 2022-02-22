@@ -412,13 +412,13 @@ myBaseLayout = screenCornerLayoutHook
     $ onWorkspace (myWorkspaces !! 8) settingsLayouts
     $ allLayouts
   where
-    allLayouts = tall ||| full ||| twoPane ||| threeColMid ||| oneBig ||| dishes
+    allLayouts = tall ||| full ||| twoPane ||| threeColMid ||| oneBig ||| dishes ||| grid
     webLayouts = oneBig ||| threeColMid ||| dishes ||| tall
       -- ||| floats
       -- ||| grid
       -- ||| spirals
-    codeLayouts = tabs ||| twoPane
-    chatLayouts = tall
+    codeLayouts = tabs ||| twoPane ||| dishes
+    chatLayouts = grid ||| threeColMid ||| tall
     youtubeLayouts = oneBig ||| full
     settingsLayouts = circle ||| grid ||| spirals ||| floats
 
@@ -626,7 +626,7 @@ main = do
       ("M-S-b", spawn "onboard"),
       ("M-@", spawn "onboard"),
       ("M-S-e", spawn "gedit"),
-      ("M-S-p", spawn "xlayoutdisplay -d 108 && nitrogen --restore"),
+      ("M-S-p", spawn "xlayoutdisplay -d 96 && nitrogen --restore"),
       ("M-S-n", spawn "nitrogen --restore"),
       ("M-S-ß", xmessage help)
     ])
