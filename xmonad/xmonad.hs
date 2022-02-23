@@ -66,6 +66,7 @@ import XMonad.Util.WorkspaceCompare (getSortByXineramaRule, getSortByIndex)
 import XMonad.Util.EZConfig
 import XMonad.Util.Ungrab
 import XMonad.Util.Run
+import XMonad.Util.NamedScratchpad
 import XMonad.Util.Loggers
 import XMonad.Actions.CycleWS
 import XMonad.Actions.MouseResize
@@ -93,6 +94,7 @@ import System.IO
 import System.Exit
 
 myKeys conf@(XConfig {modMask = mod4Mask}) = M.fromList $ [
+    ((mod4Mask, xK_Return), namedScratchpadAction myScratchpads "alacritty"),
     ((mod4Mask .|. shiftMask, xK_Return), spawn $ XMonad.terminal conf),
     ((mod4Mask .|. controlMask, xK_Return), spawn "alacritty"),
     ((mod4Mask .|. shiftMask, xK_c), kill),
@@ -123,7 +125,7 @@ myKeys conf@(XConfig {modMask = mod4Mask}) = M.fromList $ [
 
     ((mod4Mask, xK_m), withFocused minimizeWindow),
     ((mod4Mask .|. shiftMask, xK_m), withLastMinimized maximizeWindowAndFocus),
-    ((mod4Mask, xK_Return), windows W.swapMaster),
+    -- ((mod4Mask, xK_Return), windows W.swapMaster),
     ((mod4Mask, xK_u), sendMessage Shrink),
     ((mod4Mask .|. shiftMask, xK_u), sendMessage ShrinkSlave),
     ((mod4Mask, xK_i), sendMessage Expand),
@@ -166,6 +168,12 @@ xmobarEscape = concatMap doubleLts
 
 myWorkspaces = map xmobarEscape ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
 
+myScratchpads = [
+    NS "alacritty" "alacritty" (className =? "Alacritty") (customFloating $ W.RationalRect (1/6) (1/6) (2/3) (2/3))
+    -- NS "stardict" "stardict" (className =? "Stardict")
+    --     (customFloating $ W.RationalRect (1/6) (1/6) (2/3) (2/3)) ,
+    -- NS "notes" "gvim --role notes ~/notes.txt" (role =? "notes") nonFloating
+  ] where role = stringProperty "WM_WINDOW_ROLE"
 
 myStartupHook = do
   --spawn "killall conky"
@@ -450,7 +458,7 @@ toggleFull = withFocused (\windowId -> do
 
 doLowerStack = ask >>= \w -> liftX $ withDisplay $ \dpy -> io (lowerWindow dpy w) >> mempty
 
-myHooks = manageSpawn <+> composeAll
+myHooks = manageSpawn <+> namedScratchpadManageHook myScratchpads <+> composeAll
   [
     fmap not isDialog --> InsertPosition.insertPosition InsertPosition.End InsertPosition.Newer,
     isDialog --> doFloat <+> placeHook (withGaps (16,16,16,16) simpleSmart),
@@ -516,7 +524,8 @@ myWorkspaceNames = [
     ("6", "⁶ <fn=3>\xf16a </fn>"),
     ("7", "⁷ <fn=3>\xf001 </fn>"),
     ("8", "⁸ <fn=3>\xf7b3 </fn>"),
-    ("9", "⁹ <fn=3>\xf013 </fn>")
+    ("9", "⁹ <fn=3>\xf013 </fn>"),
+    ("NSP", "")
   ]
 
 myLayoutImages = [
