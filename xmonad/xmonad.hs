@@ -1,5 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
 import XMonad
@@ -7,7 +8,8 @@ import XMonad.Core
 import XMonad.Prelude ((<&>), (>=>))
 import XMonad.Layout.Accordion
 import XMonad.Layout.Cross
-import XMonad.Layout.DecorationAddons
+import XMonad.Layout.Decoration
+import XMonad.Layout.DecorationAddons (handleScreenCrossing)
 import XMonad.Layout.ImageButtonDecoration
 import XMonad.Layout.TwoPanePersistent
 import XMonad.Layout.TabBarDecoration
@@ -29,7 +31,7 @@ import XMonad.Layout.LimitWindows (limitWindows, increaseLimit, decreaseLimit)
 import XMonad.Layout.Tabbed
 import XMonad.Layout.SimplestFloat
 import XMonad.Layout.PositionStoreFloat
-import XMonad.Layout.NoFrillsDecoration
+-- import XMonad.Layout.NoFrillsDecoration
 import XMonad.Layout.BorderResize
 import XMonad.Layout.Spiral
 import XMonad.Layout.ThreeColumns
@@ -39,6 +41,7 @@ import XMonad.Layout.IndependentScreens
 import XMonad.Layout.GridVariants (Grid(Grid))
 import XMonad.Layout.MagicFocus
 import XMonad.Layout.Minimize
+import XMonad.Layout.Maximize
 import XMonad.Layout.MultiToggle
 import XMonad.Layout.MultiToggle.Instances
 -- import XMonad.Layout.MultiToggle (mkToggle, isToggleActive, single, EOT(EOT), (??))
@@ -62,6 +65,7 @@ import XMonad.Hooks.RefocusLast (refocusLastLayoutHook, refocusLastWhen, isFloat
 import XMonad.Actions.SpawnOn
 import XMonad.Actions.Minimize
 import XMonad.Actions.FloatSnap
+import XMonad.Actions.WindowMenu
 import XMonad.Util.WorkspaceCompare (getSortByXineramaRule, getSortByIndex)
 import XMonad.Util.EZConfig
 import XMonad.Util.Ungrab
@@ -123,8 +127,9 @@ myKeys conf@(XConfig {modMask = mod4Mask}) = M.fromList $ [
     ((mod4Mask .|. controlMask .|. shiftMask, xK_j), sendMessage (DecreaseDown 10)),
     ((mod4Mask .|. controlMask .|. shiftMask, xK_k), sendMessage (DecreaseUp 10)),
 
-    ((mod4Mask, xK_m), withFocused minimizeWindow),
-    ((mod4Mask .|. shiftMask, xK_m), withLastMinimized maximizeWindowAndFocus),
+    ((mod4Mask, xK_m), withFocused (sendMessage . maximizeRestore)),
+    ((mod4Mask, xK_minus), withFocused minimizeWindow),
+    ((mod4Mask .|. shiftMask, xK_minus), withLastMinimized maximizeWindowAndFocus),
     -- ((mod4Mask, xK_Return), windows W.swapMaster),
     ((mod4Mask, xK_u), sendMessage Shrink),
     ((mod4Mask .|. shiftMask, xK_u), sendMessage ShrinkSlave),
@@ -146,7 +151,7 @@ myKeys conf@(XConfig {modMask = mod4Mask}) = M.fromList $ [
     ((mod4Mask, xK_o), sendMessage Mag.Toggle),
     ((mod4Mask, xK_b), sendMessage ToggleStruts),
     ((mod4Mask, xK_plus), sendMessage Mag.MagnifyMore),
-    ((mod4Mask, xK_minus), sendMessage Mag.MagnifyLess),
+    ((mod4Mask .|. shiftMask, xK_plus), sendMessage Mag.MagnifyLess),
     ((0, xF86XK_AudioMute), spawn "amixer set Master 'toggle'"),
     ((0, xF86XK_AudioRaiseVolume), spawn "amixer set Master 5%+"),
     ((0, xF86XK_AudioLowerVolume), spawn "amixer set Master 5%-"),
@@ -207,7 +212,8 @@ myStartupHook = do
   --spawn "alttab -w 1 --theme -fg '#d58681' -bg '#4a4a4a' -frame '#eb564d' -t 128x150 -i 127x64"
   addScreenCorner SCLowerLeft (spawn "killall plank && plank")
 
-mySpacing i = spacingRaw False (Border i i i i) True (Border i i i i) True
+mySpacing i = spacingRaw False (Border 0 i i i) True (Border 0 i i i) True
+mySpacingCustom bottom top left right = spacingRaw False (Border bottom top left right) True (Border bottom top left right) True
 mySpacing' i = spacingRaw True (Border i i i i) True (Border i i i i) True
 
 
@@ -238,35 +244,95 @@ instance Transformer MyToggles Window where
 myTheme = def {
     windowTitleIcons = [
       (menuButton, CenterLeft 10),
+      --(maxiButton, CenterRight 30),
+      --(miniButton, CenterRight 50),
       (closeButton, CenterRight 10)
-      -- (maxiButton, CenterRight 30),
-      -- (miniButton, CenterRight 50)
     ],
     fontName = "xft:Roboto Nerd Font:regular:pixelsize=11",
-    activeColor = "#3e445e",
-    inactiveColor = "#292d3e",
-    activeBorderColor = "#292d3e",
-    inactiveBorderColor = "#292d3e",
+    activeColor = "#34363d",
+    inactiveColor = "#20222a",
+    activeBorderColor = "#34363d",
+    inactiveBorderColor = "#20222a",
     activeTextColor = "#ffffff",
     inactiveTextColor = "#d0d0d0"
   }
+
+minimizeButtonOffset :: Int
+minimizeButtonOffset = 48
+maximizeButtonOffset :: Int
+maximizeButtonOffset = 25
+closeButtonOffset :: Int
+closeButtonOffset = 10
+buttonSize :: Int
+buttonSize = 10
+
+
+titleBarButtonHandler :: Window -> Int -> Int -> X Bool
+titleBarButtonHandler mainw distFromLeft distFromRight = do
+    let action
+          | fi distFromLeft <= 3 * buttonSize = focus mainw >> windowMenu >> return True
+          | fi distFromRight >= closeButtonOffset &&
+            fi distFromRight <= closeButtonOffset + buttonSize = focus mainw >> kill >> return True
+          | fi distFromRight >= maximizeButtonOffset &&
+            fi distFromRight <= maximizeButtonOffset + (2 * buttonSize) = focus mainw >> sendMessage (maximizeRestore mainw) >> return True
+          | fi distFromRight >= minimizeButtonOffset &&
+            fi distFromRight <= minimizeButtonOffset + buttonSize = focus mainw >> minimizeWindow mainw >> return True
+          | otherwise = return False
+    action
 
 mrtFraction = 0.7
 mrtDraggerOffset = 10
 mrtDraggerSize = 10
 
+buttonDeco :: (Eq a, Shrinker s) => s -> Theme
+           -> l a -> ModifiedLayout (Decoration ButtonDecoration s) l a
+buttonDeco s c = decoration s c $ NFD False
+
+newtype ButtonDecoration a = NFD Bool deriving (Show, Read)
+
+instance Eq a => DecorationStyle ButtonDecoration a where
+    describeDeco _ = "ButtonDeco"
+    decorationCatchClicksHook _ mainw distFromLeft distFromRight = titleBarButtonHandler mainw distFromLeft distFromRight
+    decorationAfterDraggingHook _ (mainw, _) decoWin = focus mainw >> handleScreenCrossing mainw decoWin >> return ()
+    -- decorationEventHook _ ds ButtonEvent {
+    --     ev_window = ew,
+    --     ev_event_type = et,
+    --     ev_button = eb
+    --   } | et == buttonPress, Just ((w,_),_) <- findWindowByDecoration ew ds =
+    --     if eb == button2
+    --       then killWindow w
+    --       else focus w
+    pureDecoration _ width height _ windowStack@(W.Stack focusedWindow _ _) _ (window,Rectangle x y windowWidth _) = -- window == focusedWindow ||
+        if not (isInStack windowStack window) then Nothing else Just $ Rectangle (fi nx) y nwh (fi height)
+            where nwh = min windowWidth $ fi width
+                  nx  = fi x + windowWidth - nwh
+
 tall = renamed [Replace "tall"]
-    $ minimize
-    $ Mag.magnifierOff
-    $ mkToggle (single REFLECTX)
-    $ mkToggle (single REFLECTY)
-    -- $ mkToggle1 FOLLOW
-    $ limitWindows 12
-    $ mySpacing 8
-    -- $ gaps [(D,72)]
-    -- $ windowSwitcherDecorationWithImageButtons shrinkText myTheme (draggingVisualizer $ mouseResizableTile)
-    -- $ tabBar shrinkText myTheme Top (resizeVertical 20 $ mouseResizableTile )
-    $ mouseResizableTile
+    $ mySpacingCustom 8 0 0 0
+    $ buttonDeco shrinkText myTheme ( windowArrange
+      $ maximizeWithPadding 8
+      $ maximize
+      $ minimize
+      $ Mag.magnifierOff
+      $ mkToggle (single REFLECTX)
+      $ mkToggle (single REFLECTY)
+      $ limitWindows 12
+      $ mySpacingCustom 0 8 8 8
+      $ mouseResizableTile
+    )
+oneBig = renamed [Replace "oneBig"]
+    $ mySpacingCustom 8 0 0 0
+    $ buttonDeco shrinkText myTheme ( windowArrange
+      $ maximizeWithPadding 8
+      $ minimize
+      $ Mag.magnifierOff
+      $ mkToggle (single REFLECTX)
+      $ mkToggle (single REFLECTY)
+      $ mkToggle (single FOLLOW)
+      $ limitWindows 12
+      $ mySpacingCustom 0 8 8 8
+      $ OneBig (3/4) (3/5)
+    )
 accordion = renamed [Replace "accordion"]
     $ minimize
     $ Mag.magnifierOff
@@ -288,35 +354,32 @@ circle = renamed [Replace "circle"]
     -- $ gaps [(D,72)]
     $ Circle
 dishes = renamed [Replace "dishes"]
-    $ minimize
-    $ Mag.magnifierOff
-    $ mkToggle (single REFLECTX)
-    $ mkToggle (single REFLECTY)
-    $ mkToggle (single FOLLOW)
-    $ limitWindows 12
-    $ mySpacing 8
-    -- $ gaps [(D,72)]
-    $ Dishes 2 (1/5)
-oneBig = renamed [Replace "oneBig"]
-    $ minimize
-    $ Mag.magnifierOff
-    $ mkToggle (single REFLECTX)
-    $ mkToggle (single REFLECTY)
-    $ mkToggle (single FOLLOW)
-    $ limitWindows 12
-    $ mySpacing 8
-    -- $ gaps [(D,72)]
-    $ OneBig (3/4) (3/5)
+    $ mySpacingCustom 8 0 0 0
+    $ buttonDeco shrinkText myTheme ( windowArrange
+      $ maximizeWithPadding 8
+      $ minimize
+      $ Mag.magnifierOff
+      $ mkToggle (single REFLECTX)
+      $ mkToggle (single REFLECTY)
+      $ mkToggle (single FOLLOW)
+      $ limitWindows 12
+      $ mySpacingCustom 0 8 8 8
+      $ Dishes 2 (1/5)
+    )
 twoPane = renamed [Replace "twoPane"]
-    $ minimize
-    $ Mag.magnifierOff
-    $ mkToggle (single REFLECTX)
-    $ mkToggle (single REFLECTY)
-    $ mkToggle (single FOLLOW)
-    $ limitWindows 12
-    $ mySpacing 8
-    -- $ gaps [(D,72)]
-    $ TwoPanePersistent Nothing (3/100) (1/2)
+    $ mySpacingCustom 8 0 0 0
+    $ buttonDeco shrinkText myTheme ( windowArrange
+      $ maximizeWithPadding 8
+      $ minimize
+      $ Mag.magnifierOff
+      $ mkToggle (single REFLECTX)
+      $ mkToggle (single REFLECTY)
+      $ mkToggle (single FOLLOW)
+      $ limitWindows 12
+      $ mySpacingCustom 0 8 8 8
+      -- $ gaps [(D,72)]
+      $ TwoPanePersistent Nothing (3/100) (1/2)
+    )
 roledex = renamed [Replace "roledex"]
     $ minimize
     $ Mag.magnifierOff
@@ -338,63 +401,88 @@ full = renamed [Replace "full"]
     -- $ gaps [(D,72)]
     $ limitWindows 20 Full
 floats = renamed [Replace "floats"]
-    $ minimize
-    $ Mag.magnifierOff
-    $ mkToggle (single REFLECTX)
-    $ mkToggle (single REFLECTY)
-    $ mkToggle (single FOLLOW)
-    $ limitWindows 20
-    $ simplestFloat
-    -- $ floatingDeco $ borderResize $ positionStoreFloat
-    -- where floatingDeco l = noFrillsDeco shrinkText def l
+    $ buttonDeco shrinkText myTheme ( windowArrange
+      $ maximizeWithPadding 8
+      $ maximize
+      $ minimize
+      $ Mag.magnifierOff
+      $ mkToggle (single REFLECTX)
+      $ mkToggle (single REFLECTY)
+      $ mkToggle (single FOLLOW)
+      $ limitWindows 20
+      $ simplestFloat
+    )
 grid = renamed [Replace "grid"]
-    $ minimize
-    $ Mag.magnifierOff
-    $ mkToggle (single REFLECTX)
-    $ mkToggle (single REFLECTY)
-    $ mkToggle (single FOLLOW)
-    $ limitWindows 12
-    $ mySpacing 8
-    $ mkToggle (single MIRROR)
-    $ Grid (16/10)
+    $ mySpacingCustom 8 0 0 0
+    $ buttonDeco shrinkText myTheme ( windowArrange
+      $ maximizeWithPadding 8
+      $ maximize
+      $ minimize
+      $ Mag.magnifierOff
+      $ mkToggle (single REFLECTX)
+      $ mkToggle (single REFLECTY)
+      $ mkToggle (single FOLLOW)
+      $ limitWindows 12
+      $ mySpacingCustom 0 8 8 8
+      $ mkToggle (single MIRROR)
+      $ Grid (16/10)
+    )
 spirals = renamed [Replace "spirals"]
-    $ minimize
-    $ Mag.magnifierOff
-    $ mkToggle (single REFLECTX)
-    $ mkToggle (single REFLECTY)
-    $ mkToggle (single FOLLOW)
-    $ mySpacing 8
-    $ Dwindle.Dwindle Dwindle.R Dwindle.CW 1.5 1.1
+    $ mySpacingCustom 8 0 0 0
+    $ buttonDeco shrinkText myTheme ( windowArrange
+      $ maximizeWithPadding 8
+      $ maximize
+      $ minimize
+      $ Mag.magnifierOff
+      $ mkToggle (single REFLECTX)
+      $ mkToggle (single REFLECTY)
+      $ mkToggle (single FOLLOW)
+      $ mySpacingCustom 0 8 8 8
+      $ Dwindle.Dwindle Dwindle.R Dwindle.CW 1.5 1.1
+    )
 threeCol = renamed [Replace "threeCol"]
-    $ minimize
-    $ Mag.magnifierOff
-    $ mkToggle (single REFLECTX)
-    $ mkToggle (single REFLECTY)
-    $ mkToggle (single FOLLOW)
-    $ limitWindows 7
-    $ mySpacing 8
-    -- $ gaps [(D,72)]
-    $ ThreeCol 1 (3/100) (1/2)
+    $ mySpacingCustom 8 0 0 0
+    $ buttonDeco shrinkText myTheme ( windowArrange
+      $ maximizeWithPadding 8
+      $ maximize
+      $ minimize
+      $ Mag.magnifierOff
+      $ mkToggle (single REFLECTX)
+      $ mkToggle (single REFLECTY)
+      $ mkToggle (single FOLLOW)
+      $ limitWindows 7
+      $ mySpacingCustom 0 8 8 8
+      $ ThreeCol 1 (3/100) (1/2)
+    )
 threeColMid = renamed [Replace "threeColMid"]
-    $ minimize
-    $ Mag.magnifierOff
-    $ mkToggle (single REFLECTX)
-    $ mkToggle (single REFLECTY)
-    $ mkToggle (single FOLLOW)
-    $ limitWindows 7
-    $ mySpacing 8
-    -- $ gaps [(D,72)]
-    $ ThreeColMid 1 (3/100) (1/2)
+    $ mySpacingCustom 8 0 0 0
+    $ buttonDeco shrinkText myTheme ( windowArrange
+      $ maximizeWithPadding 8
+      $ maximize
+      $ minimize
+      $ Mag.magnifierOff
+      $ mkToggle (single REFLECTX)
+      $ mkToggle (single REFLECTY)
+      $ mkToggle (single FOLLOW)
+      $ limitWindows 7
+      $ mySpacingCustom 0 8 8 8
+      $ ThreeColMid 1 (3/100) (1/2)
+    )
 threeRow = renamed [Replace "threeRow"]
-    $ minimize
-    $ Mag.magnifierOff
-    $ mkToggle (single REFLECTX)
-    $ mkToggle (single REFLECTY)
-    $ mkToggle (single FOLLOW)
-    $ limitWindows 7
-    $ mySpacing 8
-    $ Mirror
-    $ ThreeCol 1 (3/100) (1/2)
+    $ mySpacingCustom 8 0 0 0
+    $ buttonDeco shrinkText myTheme ( windowArrange
+      $ maximizeWithPadding 8
+      $ maximize
+      $ minimize
+      $ Mag.magnifierOff
+      $ mkToggle (single REFLECTX)
+      $ mkToggle (single REFLECTY)
+      $ mkToggle (single FOLLOW)
+      $ limitWindows 7
+      $ mySpacingCustom 0 8 8 8
+      $ Mirror
+      $ ThreeCol 1 (3/100) (1/2)
+    )
 tabs = renamed [Replace "tabs"]
     $ noBorders
     $ minimize
@@ -402,14 +490,17 @@ tabs = renamed [Replace "tabs"]
     $ mkToggle (single REFLECTX)
     $ mkToggle (single REFLECTY)
     $ gaps [(D,16), (U,16), (L,16), (R,16)]
-    $ trackFloating (useTransientFor (tabbed shrinkText (myTheme { windowTitleIcons = [] })))
+    $ trackFloating (useTransientFor (tabbed shrinkText (myTheme {
+          windowTitleIcons = [],
+          activeColor = "#3e445e",
+          inactiveColor = "#292d3e"
+        })))
 
 myBaseLayout = screenCornerLayoutHook
     $ mouseResize
     -- $ magicFocus
     $ boringWindows
     $ refocusLastLayoutHook
-    $ windowArrange
     $ T.toggleLayouts roledex
     $ T.toggleLayouts floats
     $ mkToggle (NBFULL ?? NOBORDERS ?? EOT)
@@ -575,7 +666,7 @@ myLogHook xmproc0 = do
       ppVisibleNoWindows = Just (xmobarColor "yellow" "" . wrap "" ""),
       ppHidden = xmobarColor "white" "" . wrap "" "",
       ppHiddenNoWindows = xmobarColor "#767676" "" . wrap "" "",
-      ppTitle   = xmobarColor "gray"  "" . shorten 70,
+      ppTitle   = xmobarColor "gray"  "" . shorten 48,
       ppUrgent  = xmobarColor "red" "yellow",
       --ppLayout = const (""),
       ppLayout = xmobarColor "white" "" . translateLayouts,
