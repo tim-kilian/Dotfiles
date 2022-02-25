@@ -61,7 +61,8 @@ import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.SetWMName
 import XMonad.Hooks.ScreenCorners
 import XMonad.Hooks.RefocusLast (refocusLastLayoutHook, refocusLastWhen, isFloat)
-
+import XMonad.Actions.Navigation2D
+import XMonad.Actions.MouseGestures
 import XMonad.Actions.SpawnOn
 import XMonad.Actions.Minimize
 import XMonad.Actions.FloatSnap
@@ -110,10 +111,13 @@ myKeys conf@(XConfig {modMask = mod4Mask}) = M.fromList $ [
 
     ((mod1Mask, xK_l), spawn "slock"),
 
-    ((mod4Mask, xK_j), windows W.swapDown),
-    ((mod4Mask, xK_k), windows W.swapUp),
     ((mod4Mask, xK_s), sendMessage  Arrange),
     ((mod4Mask .|. shiftMask, xK_s), sendMessage  DeArrange),
+
+    ((mod4Mask, xK_h), windowSwap L False),
+    ((mod4Mask, xK_j), windowSwap D False),
+    ((mod4Mask, xK_l), windowSwap R False),
+    ((mod4Mask, xK_k), windowSwap U False),
     ((mod4Mask .|. shiftMask, xK_h), sendMessage (MoveLeft 10)),
     ((mod4Mask .|. shiftMask, xK_l), sendMessage (MoveRight 10)),
     ((mod4Mask .|. shiftMask, xK_j), sendMessage (MoveDown 10)),
@@ -130,7 +134,9 @@ myKeys conf@(XConfig {modMask = mod4Mask}) = M.fromList $ [
     ((mod4Mask, xK_m), withFocused (sendMessage . maximizeRestore)),
     ((mod4Mask, xK_minus), withFocused minimizeWindow),
     ((mod4Mask .|. shiftMask, xK_minus), withLastMinimized maximizeWindowAndFocus),
-    -- ((mod4Mask, xK_Return), windows W.swapMaster),
+
+    ((mod4Mask, xK_g), windows W.swapMaster),
+
     ((mod4Mask, xK_u), sendMessage Shrink),
     ((mod4Mask .|. shiftMask, xK_u), sendMessage ShrinkSlave),
     ((mod4Mask, xK_i), sendMessage Expand),
@@ -166,6 +172,18 @@ myKeys conf@(XConfig {modMask = mod4Mask}) = M.fromList $ [
   where
     nextLayout = sendMessage NextLayout
     prevLayout = sendMessage NextLayout
+
+myMouseBindings = [
+    -- ((button4Mask, button3), mouseGesture gestures)
+  ]
+  where
+    gestures = M.fromList [
+        ([R, D], \_ -> sendMessage NextLayout),
+        ([U   ], \w -> focus w >> windowSwap U False),
+        ([D   ], \w -> focus w >> windowSwap D False),
+        ([L   ], \w -> focus w >> windowSwap L False),
+        ([R   ], \w -> focus w >> windowSwap R False)
+      ]
 
 xmobarEscape = concatMap doubleLts
   where
@@ -699,37 +717,62 @@ main = do
   -- xmproc0 <- spawnPipe "xmobar -x 0 $HOME/.xmonad/xmobar/apps.hs"
   -- xmproc1 <- spawnPipe "xmobar -x 0 $HOME/.xmonad/xmobar/workspaces.hs"
   -- xmproc2 <- spawnPipe "xmobar -x 0 $HOME/.xmonad/xmobar/status.hs"
-  xmonad $ docks . setEwmhWorkspaceSort mySort . ewmhFullscreen . ewmh $ Hacks.javaHack (def {
-    modMask = mod4Mask,
-    terminal = "tilix",
-    borderWidth = 0,
-    focusedBorderColor = "#e94e1b",
-    -- focusFollowsMouse = False,
+  xmonad
+    $ docks . setEwmhWorkspaceSort mySort . ewmhFullscreen . ewmh
+    $ withNavigation2DConfig def {
+      layoutNavigation = [
+        ("tall", sideNavigation),
+        ("twoPane", lineNavigation),
+        ("threeColMid", sideNavigation),
+        ("oneBig", centerNavigation),
+        ("dishes", centerNavigation),
+        ("tabs", centerNavigation),
+        ("full", centerNavigation),
+        ("grid", centerNavigation),
+        ("floats", hybridOf lineNavigation centerNavigation)
+      ],
+      unmappedWindowRect = [
+        ("tall", singleWindowRect),
+        ("twoPane", singleWindowRect),
+        ("threeColMid", singleWindowRect),
+        ("oneBig", singleWindowRect),
+        ("dishes", singleWindowRect),
+        ("tabs", singleWindowRect),
+        ("full", singleWindowRect),
+        ("floats", singleWindowRect)
+      ]
+    }
+    $ Hacks.javaHack (def {
+      modMask = mod4Mask,
+      terminal = "tilix",
+      borderWidth = 0,
+      focusedBorderColor = "#e94e1b",
+      -- focusFollowsMouse = False,
 
-    workspaces = myWorkspaces,
-    keys = myKeys,
+      workspaces = myWorkspaces,
+      keys = myKeys,
 
-    startupHook = myStartupHook,
-    layoutHook =  smartBorders (lessBorders FocusedOnly (avoidStruts myBaseLayout)),
-    manageHook = manageDocks <+> myHooks,
-    handleEventHook = myEventHook,
-    logHook = myLogHook xmproc0 -- xmproc1 xmproc2
-  } `additionalKeysP` [
-      -- ("M-l", spawn "slock"),
-      ("M-r", spawn "rofi -combi-modi window,drun -theme android_notification -font \"hack 10\" -show combi"),
-      ("M-p", spawn "dmenu_run -fn \"xft:Roboto:size=15\" -y 1"),
-      --("<Escape>", spawn "killall plank"),
-      --("<Backspace>", spawn "killall plank"),
-      ("<Print>", spawn "flameshot gui -p ~/Pictures/Screenshots/"),
-      ("M-<Print>", spawn "flameshot screen -p ~/Pictures/Screenshots/"),
-      ("M-e", spawn "nemo"),
-      ("M-S-b", spawn "onboard"),
-      ("M-@", spawn "onboard"),
-      ("M-S-e", spawn "gedit"),
-      ("M-S-p", spawn "xlayoutdisplay -d 96 && nitrogen --restore"),
-      ("M-S-n", spawn "nitrogen --restore"),
-      ("M-S-ß", xmessage help)
-    ])
+      startupHook = myStartupHook,
+      layoutHook =  smartBorders (lessBorders FocusedOnly (avoidStruts myBaseLayout)),
+      manageHook = manageDocks <+> myHooks,
+      handleEventHook = myEventHook,
+      logHook = myLogHook xmproc0 -- xmproc1 xmproc2
+    } `additionalMouseBindings` myMouseBindings `additionalKeysP` [
+        -- ("M-l", spawn "slock"),
+        ("M-r", spawn "rofi -combi-modi window,drun -theme android_notification -font \"hack 10\" -show combi"),
+        ("M-p", spawn "dmenu_run -fn \"xft:Roboto:size=15\" -y 1"),
+        --("<Escape>", spawn "killall plank"),
+        --("<Backspace>", spawn "killall plank"),
+        ("<Print>", spawn "flameshot gui -p ~/Pictures/Screenshots/"),
+        ("M-<Print>", spawn "flameshot screen -p ~/Pictures/Screenshots/"),
+        ("M-e", spawn "nemo"),
+        ("M-S-b", spawn "onboard"),
+        ("M-@", spawn "onboard"),
+        ("M-S-e", spawn "gedit"),
+        ("M-S-p", spawn "xlayoutdisplay -d 96 && nitrogen --restore"),
+        ("M-S-n", spawn "nitrogen --restore"),
+        ("M-S-ß", xmessage help)
+      ])
 
 convertToBool = map (map (== 1))
 
