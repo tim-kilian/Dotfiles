@@ -38,7 +38,8 @@ import XMonad.Layout.ThreeColumns
 import XMonad.Layout.TrackFloating
 import XMonad.Layout.CenteredMaster
 import XMonad.Layout.IndependentScreens
-import XMonad.Layout.GridVariants (Grid(Grid))
+-- import XMonad.Layout.GridVariants (Grid(Grid))
+import XMonad.Layout.HintedGrid(Grid(Grid, GridRatio))
 import XMonad.Layout.MagicFocus
 import XMonad.Layout.Minimize
 import XMonad.Layout.Maximize
@@ -137,10 +138,10 @@ myKeys conf@(XConfig {modMask = mod4Mask}) = M.fromList $ [
 
     ((mod4Mask, xK_g), windows W.swapMaster),
 
-    ((mod4Mask, xK_u), sendMessage Shrink),
-    ((mod4Mask .|. shiftMask, xK_u), sendMessage ShrinkSlave),
-    ((mod4Mask, xK_i), sendMessage Expand),
-    ((mod4Mask .|. shiftMask, xK_i), sendMessage ExpandSlave),
+    ((mod4Mask, xK_u), sendMessage Expand),
+    ((mod4Mask .|. shiftMask, xK_u), sendMessage ExpandSlave),
+    ((mod4Mask, xK_i), sendMessage Shrink),
+    ((mod4Mask .|. shiftMask, xK_i), sendMessage ShrinkSlave),
     ((mod4Mask, xK_t), withFocused toggleFloat),
     ((mod4Mask, xK_w), placeFocused (withGaps (16,16,16,16) simpleSmart)),
     ((mod4Mask, xK_f), toggleFull),
@@ -261,7 +262,7 @@ instance Transformer MyToggles Window where
 
 myTheme = def {
     windowTitleIcons = [
-      (menuButton, CenterLeft 10),
+      --(menuButton, CenterLeft 10),
       --(maxiButton, CenterRight 30),
       --(miniButton, CenterRight 50),
       (closeButton, CenterRight 10)
@@ -328,7 +329,7 @@ instance Eq a => DecorationStyle ButtonDecoration a where
 tall = renamed [Replace "tall"]
     $ mySpacingCustom 8 0 0 0
     $ buttonDeco shrinkText myTheme ( windowArrange
-      $ maximizeWithPadding 8
+      $ maximizeWithPadding 16
       $ maximize
       $ minimize
       $ Mag.magnifierOff
@@ -341,7 +342,7 @@ tall = renamed [Replace "tall"]
 oneBig = renamed [Replace "oneBig"]
     $ mySpacingCustom 8 0 0 0
     $ buttonDeco shrinkText myTheme ( windowArrange
-      $ maximizeWithPadding 8
+      $ maximizeWithPadding 16
       $ minimize
       $ Mag.magnifierOff
       $ mkToggle (single REFLECTX)
@@ -374,7 +375,7 @@ circle = renamed [Replace "circle"]
 dishes = renamed [Replace "dishes"]
     $ mySpacingCustom 8 0 0 0
     $ buttonDeco shrinkText myTheme ( windowArrange
-      $ maximizeWithPadding 8
+      $ maximizeWithPadding 16
       $ minimize
       $ Mag.magnifierOff
       $ mkToggle (single REFLECTX)
@@ -387,7 +388,7 @@ dishes = renamed [Replace "dishes"]
 twoPane = renamed [Replace "twoPane"]
     $ mySpacingCustom 8 0 0 0
     $ buttonDeco shrinkText myTheme ( windowArrange
-      $ maximizeWithPadding 8
+      $ maximizeWithPadding 16
       $ minimize
       $ Mag.magnifierOff
       $ mkToggle (single REFLECTX)
@@ -420,7 +421,7 @@ full = renamed [Replace "full"]
     $ limitWindows 20 Full
 floats = renamed [Replace "floats"]
     $ buttonDeco shrinkText myTheme ( windowArrange
-      $ maximizeWithPadding 8
+      $ maximizeWithPadding 16
       $ maximize
       $ minimize
       $ Mag.magnifierOff
@@ -433,7 +434,7 @@ floats = renamed [Replace "floats"]
 grid = renamed [Replace "grid"]
     $ mySpacingCustom 8 0 0 0
     $ buttonDeco shrinkText myTheme ( windowArrange
-      $ maximizeWithPadding 8
+      $ maximizeWithPadding 16
       $ maximize
       $ minimize
       $ Mag.magnifierOff
@@ -443,12 +444,13 @@ grid = renamed [Replace "grid"]
       $ limitWindows 12
       $ mySpacingCustom 0 8 8 8
       $ mkToggle (single MIRROR)
-      $ Grid (16/10)
+      -- $ Grid (16/10)
+      $ GridRatio (4/3) False
     )
 spirals = renamed [Replace "spirals"]
     $ mySpacingCustom 8 0 0 0
     $ buttonDeco shrinkText myTheme ( windowArrange
-      $ maximizeWithPadding 8
+      $ maximizeWithPadding 16
       $ maximize
       $ minimize
       $ Mag.magnifierOff
@@ -461,7 +463,7 @@ spirals = renamed [Replace "spirals"]
 threeCol = renamed [Replace "threeCol"]
     $ mySpacingCustom 8 0 0 0
     $ buttonDeco shrinkText myTheme ( windowArrange
-      $ maximizeWithPadding 8
+      $ maximizeWithPadding 16
       $ maximize
       $ minimize
       $ Mag.magnifierOff
@@ -475,7 +477,7 @@ threeCol = renamed [Replace "threeCol"]
 threeColMid = renamed [Replace "threeColMid"]
     $ mySpacingCustom 8 0 0 0
     $ buttonDeco shrinkText myTheme ( windowArrange
-      $ maximizeWithPadding 8
+      $ maximizeWithPadding 16
       $ maximize
       $ minimize
       $ Mag.magnifierOff
@@ -489,7 +491,7 @@ threeColMid = renamed [Replace "threeColMid"]
 threeRow = renamed [Replace "threeRow"]
     $ mySpacingCustom 8 0 0 0
     $ buttonDeco shrinkText myTheme ( windowArrange
-      $ maximizeWithPadding 8
+      $ maximizeWithPadding 16
       $ maximize
       $ minimize
       $ Mag.magnifierOff
