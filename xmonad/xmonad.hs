@@ -81,6 +81,7 @@ import Graphics.X11.ExtraTypes.XF86
 
 import XMonad.Util.Image
 
+import qualified XMonad.Actions.FlexibleResize as Flex
 import qualified XMonad.Layout.Dwindle as Dwindle
 import qualified XMonad.Layout.Magnifier as Mag
 import qualified XMonad.Hooks.InsertPosition as InsertPosition
@@ -176,6 +177,7 @@ myKeys conf@(XConfig {modMask = mod4Mask}) = M.fromList $ [
 
 myMouseBindings = [
     -- ((button4Mask, button3), mouseGesture gestures)
+    ((button4Mask, button3), \w -> focus w >> Flex.mouseResizeWindow w)
   ]
   where
     gestures = M.fromList [
@@ -586,7 +588,7 @@ myHooks = manageSpawn <+> namedScratchpadManageHook myScratchpads <+> composeAll
     className =? "code-oss" --> viewShift (code),
     className =? "jetbrains-idea" --> viewShift (code),
     className =? "Microsoft Teams - Preview" --> viewShift (chat),
-    -- resource =? "pavucontrol" --> doFloat <+> placeHook (fixed (0.5, 0.5)),
+    resource =? "pavucontrol" --> doFloat <+> placeHook (withGaps (16,16,16,16) simpleSmart),
     title =? "win0" --> doFloat,
     className =? "Xfce4-appfinder" --> doRectFloat (W.RationalRect 0 (1/50) (1/2) (1/2)),
     title =? "Microsoft Teams Notification" --> doSideFloat NE
