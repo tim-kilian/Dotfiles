@@ -78,14 +78,14 @@ Config
             "-A",
             "15",
             "--off-icon-pattern",
-            "<fc=#B1DE76><fn=1>\xf240</fn></fc>",
+            "<fc=#B1DE76><fn=3>\xf240 </fn></fc>",
             "--on-icon-pattern",
-            "<fc=#B1DE76><fn=1>\xf0e7</fn></fc>",
+            "<fc=#B1DE76><fn=3>\xf0e7 </fn></fc>",
             "--idle-icon-pattern",
-            "<fc=#B1DE76><fn=1>\xf0e7</fn></fc>"
+            "<fc=#B1DE76><fn=3>\xf0e7 </fn></fc>"
           ]
           50,
-        Run Date "<action=`gnome-calendar` button=1><fn=3>%H:%M  </fn><fn=1>\xf073</fn><fn=3>  %d.%m.%Y</fn></action>" "date" 10,
+        Run Date "<action=`gnome-calendar` button=1><fn=3>%H:%M  </fn><fn=3>\xf073 </fn><fn=3> %d.%m.%Y</fn></action>" "date" 10,
         Run UnsafeStdinReader,
         Run
           Volume
@@ -95,9 +95,9 @@ Config
             "<status> <volume>%",
             "--",
             "-o",
-            "<fn=1>\xf026</fn>",
+            "<fn=3>\xf026 </fn>",
             "-O",
-            "<fn=1>\xf028</fn>",
+            "<fn=3>\xf028 </fn>",
             "-c",
             "#E0E0E0",
             "-C",
@@ -107,5 +107,5 @@ Config
       ],
     sepChar = "%",
     alignSep = "}{",
-    template = "  <action=`xfce4-appfinder --disable-server` button=1><icon=arch.xpm/></action>   %UnsafeStdinReader% } { %cpu%   %memory%   %default:Master%   %battery%    <action=`oblogout` button=1><fn=3>\xf011</fn></action>     %date%   "
+    template = "  <action=`xfce4-appfinder --disable-server` button=1><icon=arch.xpm/></action>   %UnsafeStdinReader% } { %cpu%   %memory%   %default:Master%   %battery%    <action=`oblogout` button=1><fn=3> </fn></action>    %date%   "
   }
