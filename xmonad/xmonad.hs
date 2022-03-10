@@ -79,6 +79,12 @@ import XMonad.Actions.MouseResize
 import XMonad.Actions.MouseGestures
 import Graphics.X11.ExtraTypes.XF86
 
+import qualified XMonad.StackSet as SS
+import Data.Monoid (All (All))
+import Foreign.C (CInt)
+-- import qualified Control.Monad as Control (when)
+import Data.Foldable (find)
+
 import XMonad.Util.Image
 
 import qualified XMonad.Actions.FlexibleResize as Flex
@@ -713,6 +719,33 @@ myEventHook e = do
 
 mySort = getSortByXineramaRule
 
+multiScreenFocusHook :: Event -> X All
+multiScreenFocusHook MotionEvent { ev_x = x, ev_y = y } = do
+  ms <- getScreenForPos x y
+  case ms of
+    Just cursorScreen -> do
+      let cursorScreenID = SS.screen cursorScreen
+      focussedScreenID <- gets (SS.screen . SS.current . windowset)
+      when (cursorScreenID /= focussedScreenID) (focusWS $ SS.tag $ SS.workspace cursorScreen)
+      return (All True)
+    _ -> return (All True)
+  where getScreenForPos :: CInt -> CInt
+            -> X (Maybe (SS.Screen WorkspaceId (Layout Window) Window ScreenId ScreenDetail))
+        getScreenForPos x y = do
+          ws <- windowset <$> get
+          let screens = SS.current ws : SS.visible ws
+              inRects = map (inRect x y . screenRect . SS.screenDetail) screens
+          return $ fst <$> find snd (zip screens inRects)
+        inRect :: CInt -> CInt -> Rectangle -> Bool
+        inRect x y rect = let l = fromIntegral (rect_x rect)
+                              r = l + fromIntegral (rect_width rect)
+                              t = fromIntegral (rect_y rect)
+                              b = t + fromIntegral (rect_height rect)
+                           in x >= l && x < r && y >= t && y < b
+        focusWS :: WorkspaceId -> X ()
+        focusWS id = io (putStrLn $ "Focussing " ++ show id) >> windows (SS.view id)
+multiScreenFocusHook _ = return (All True)
+
 main = do
   n <- countScreens
   xmproc0 <- spawnPipe "xmobar -x 0 $HOME/.xmonad/xmobar.hs"
@@ -751,6 +784,7 @@ main = do
       terminal = "tilix",
       borderWidth = 0,
       focusedBorderColor = "#e94e1b",
+      rootMask = rootMask def .|. pointerMotionMask,
       -- focusFollowsMouse = False,
 
       workspaces = myWorkspaces,
@@ -759,7 +793,7 @@ main = do
       startupHook = myStartupHook,
       layoutHook =  smartBorders (lessBorders FocusedOnly (avoidStruts myBaseLayout)),
       manageHook = manageDocks <+> myHooks,
-      handleEventHook = myEventHook,
+      handleEventHook = myEventHook <+> multiScreenFocusHook,
       logHook = myLogHook xmproc0 -- xmproc1 xmproc2
     } `additionalMouseBindings` myMouseBindings `additionalKeysP` [
         -- ("M-l", spawn "slock"),
