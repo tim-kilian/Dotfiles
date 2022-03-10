@@ -76,8 +76,12 @@ import XMonad.Util.NamedScratchpad
 import XMonad.Util.Loggers
 import XMonad.Actions.CycleWS
 import XMonad.Actions.MouseResize
+import XMonad.Actions.Promote
 import XMonad.Actions.MouseGestures
 import Graphics.X11.ExtraTypes.XF86
+
+import XMonad.Prompt
+import XMonad.Prompt.Shell
 
 import qualified XMonad.StackSet as SS
 import Data.Monoid (All (All))
@@ -714,6 +718,8 @@ isToggleActiveInCurrent t = withWindowSet (isToggleActive t . W.workspace . W.cu
 
 myEventHook e = do
   screenCornerEventHook e
+  floatClickFocusHandler e
+  multiScreenFocusHook e
   refocusLastWhen isFloat e
   -- followOnlyIf (May.fromMaybe False <$> isToggleActiveInCurrent FOLLOW) e
 
@@ -745,6 +751,16 @@ multiScreenFocusHook MotionEvent { ev_x = x, ev_y = y } = do
         focusWS :: WorkspaceId -> X ()
         focusWS id = io (putStrLn $ "Focussing " ++ show id) >> windows (SS.view id)
 multiScreenFocusHook _ = return (All True)
+
+floatClickFocusHandler :: Event -> X All
+floatClickFocusHandler ButtonEvent { ev_window = w } = do
+	withWindowSet $ \s -> do
+		if isFloat w s
+		   then (focus w >> promote)
+		   else return ()
+		return (All True)
+		where isFloat w ss = M.member w $ W.floating ss
+floatClickFocusHandler _ = return (All True)
 
 main = do
   n <- countScreens
@@ -793,7 +809,7 @@ main = do
       startupHook = myStartupHook,
       layoutHook =  smartBorders (lessBorders FocusedOnly (avoidStruts myBaseLayout)),
       manageHook = manageDocks <+> myHooks,
-      handleEventHook = myEventHook <+> multiScreenFocusHook,
+      handleEventHook = myEventHook,
       logHook = myLogHook xmproc0 -- xmproc1 xmproc2
     } `additionalMouseBindings` myMouseBindings `additionalKeysP` [
         -- ("M-l", spawn "slock"),
