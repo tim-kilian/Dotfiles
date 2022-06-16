@@ -38,6 +38,7 @@ export EDITOR='vim'
 
 source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
 
+alias ls='lsd'
 alias reds="redshift-gtk -l $(curl -s https://location.services.mozilla.com/v1/geolocate\?key=geoclue | jq '.location.lat, .location.lng' | tr '\n' ':' | sed 's/:$//')"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
@@ -48,4 +49,7 @@ export PATH="$HOME/.local/bin:$PATH"
 export _JAVA_AWT_WM_NONREPARENTING=1
 export QT_QPA_PLATFORMTHEME=qt5ct
 export QT_STYLE_OVERRIDE=kvantum
+export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
 
+
+[ -f "/home/tkilian/.ghcup/env" ] && source "/home/tkilian/.ghcup/env" # ghcup-env

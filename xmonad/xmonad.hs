@@ -185,18 +185,25 @@ myKeys conf@(XConfig {modMask = mod4Mask}) = M.fromList $ [
     nextLayout = sendMessage NextLayout
     prevLayout = sendMessage NextLayout
 
-myMouseBindings = [
-    -- ((button4Mask, button3), mouseGesture gestures)
-    ((button4Mask, button3), \w -> focus w >> Flex.mouseResizeWindow w)
-  ]
-  where
-    gestures = M.fromList [
-        ([R, D], \_ -> sendMessage NextLayout),
-        ([U   ], \w -> focus w >> windowSwap U False),
-        ([D   ], \w -> focus w >> windowSwap D False),
-        ([L   ], \w -> focus w >> windowSwap L False),
-        ([R   ], \w -> focus w >> windowSwap R False)
-      ]
+--  myMouseBindings (XConfig {XMonad.modMask = modm}) = M.fromList [
+--       (modm, button1), \w -> focus w >> mouseMoveWindow w >> windows W.shiftMaster,
+--       (modm, button2), \w -> focus w >> windows W.shiftMaster,
+--       (modm, button3), \w -> focus w >> Flex.mouseWindow Flex.linear w >> windows W.shiftMaster
+--     ]
+
+-- myMouseBindings = [
+--     -- ((button4Mask, button3), mouseGesture gestures)
+--     ((button4Mask, button3), \w -> focus w >> Flex.mouseResizeWindow w),
+--     ((button4Mask, button1), \w -> focus w >> mouseMoveWindow w >> ifClick (snapMagicMove (Just 50) (Just 50) w))
+--   ]
+--   where
+--     gestures = M.fromList [
+--         ([R, D], \_ -> sendMessage NextLayout),
+--         ([U   ], \w -> focus w >> windowSwap U False),
+--         ([D   ], \w -> focus w >> windowSwap D False),
+--         ([L   ], \w -> focus w >> windowSwap L False),
+--         ([R   ], \w -> focus w >> windowSwap R False)
+--       ]
 
 xmobarEscape = concatMap doubleLts
   where
@@ -523,9 +530,9 @@ tabs = renamed [Replace "tabs"]
     $ mkToggle (single REFLECTY)
     $ gaps [(D,16), (U,16), (L,16), (R,16)]
     $ trackFloating (useTransientFor (tabbed shrinkText (myTheme {
-          windowTitleIcons = [],
-          activeColor = "#3e445e",
-          inactiveColor = "#292d3e"
+          windowTitleIcons = []
+          -- activeColor = "#3e445e",
+          -- inactiveColor = "#292d3e"
         })))
 
 myBaseLayout = screenCornerLayoutHook
@@ -594,6 +601,8 @@ myHooks = manageSpawn <+> namedScratchpadManageHook myScratchpads <+> composeAll
     resource =? "gxmessage" --> doCenterFloat,
     resource =? "onboard" --> doFloat,
     resource =? "xmessage" --> doCenterFloat,
+    resource =? "gnome-calculator" --> doFloat,
+    resource =? "arandr" --> doFloat,
     className =? "Tor Browser" --> doFloat,
     className =? "code-oss" --> viewShift (code),
     className =? "jetbrains-idea" --> viewShift (code),
@@ -754,12 +763,12 @@ multiScreenFocusHook _ = return (All True)
 
 floatClickFocusHandler :: Event -> X All
 floatClickFocusHandler ButtonEvent { ev_window = w } = do
-	withWindowSet $ \s -> do
-		if isFloat w s
-		   then (focus w >> promote)
-		   else return ()
-		return (All True)
-		where isFloat w ss = M.member w $ W.floating ss
+        withWindowSet $ \s -> do
+                if isFloat w s
+                   then (focus w >> promote)
+                   else return ()
+                return (All True)
+                where isFloat w ss = M.member w $ W.floating ss
 floatClickFocusHandler _ = return (All True)
 
 main = do
@@ -805,13 +814,14 @@ main = do
 
       workspaces = myWorkspaces,
       keys = myKeys,
+      -- mouseBindings = myMouseBindings,
 
       startupHook = myStartupHook,
       layoutHook =  smartBorders (lessBorders FocusedOnly (avoidStruts myBaseLayout)),
       manageHook = manageDocks <+> myHooks,
       handleEventHook = myEventHook,
       logHook = myLogHook xmproc0 -- xmproc1 xmproc2
-    } `additionalMouseBindings` myMouseBindings `additionalKeysP` [
+    } `additionalKeysP` [
         -- ("M-l", spawn "slock"),
         ("M-r", spawn "rofi -combi-modi window,drun -theme android_notification -font \"hack 10\" -show combi"),
         ("M-p", spawn "dmenu_run -fn \"xft:Roboto:size=15\" -y 1"),
