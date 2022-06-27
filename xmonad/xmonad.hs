@@ -24,7 +24,7 @@ import XMonad.Layout.Spacing
 import XMonad.Layout.ResizableTile
 import XMonad.Layout.LayoutBuilder
 import XMonad.Layout.LayoutModifier
-import XMonad.Layout.BoringWindows (boringWindows, focusDown)
+import XMonad.Layout.BoringWindows (boringWindows, boringAuto, focusDown)
 import XMonad.Layout.Gaps
 import XMonad.Layout.Renamed (renamed, Rename(Replace))
 import XMonad.Layout.LimitWindows (limitWindows, increaseLimit, decreaseLimit)
@@ -62,6 +62,7 @@ import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.SetWMName
 import XMonad.Hooks.ScreenCorners
 import XMonad.Hooks.RefocusLast (refocusLastLayoutHook, refocusLastWhen, isFloat)
+import XMonad.Actions.DwmPromote
 import XMonad.Actions.Navigation2D
 import XMonad.Actions.MouseGestures
 import XMonad.Actions.SpawnOn
@@ -155,9 +156,10 @@ myKeys conf@(XConfig {modMask = mod4Mask}) = M.fromList $ [
     ((mod4Mask .|. shiftMask, xK_i), sendMessage ShrinkSlave),
     ((mod4Mask, xK_t), withFocused toggleFloat),
     ((mod4Mask, xK_w), placeFocused (withGaps (16,16,16,16) simpleSmart)),
-    ((mod4Mask, xK_f), toggleFull),
-    ((mod4Mask, xK_Tab),  sendMessage (T.Toggle "roledex")),
-    -- ((mod4Mask, xK_v),  sendMessage (MT.Toggle FOLLOW)),
+    ((mod4Mask, xK_f), toggleFull), -- would love to toggle between full
+    ((mod4Mask .|. shiftMask, xK_f), toggleFull),
+    ((mod4Mask, xK_Tab), sendMessage (T.Toggle "roledex")),
+    -- ((mod4Mask, xK_v), sendMessage (MT.Toggle FOLLOW)),
     ((mod4Mask, xK_comma), sendMessage (IncMasterN 1)),
     ((mod4Mask, xK_period), sendMessage (IncMasterN (-1))),
     ((mod4Mask, xK_Right), nextWS),
@@ -351,10 +353,10 @@ tall = renamed [Replace "tall"]
       $ maximizeWithPadding 16
       $ maximize
       $ minimize
-      $ Mag.magnifierOff
+      $ Mag.magnifierczOff' 1.2
       $ mkToggle (single REFLECTX)
       $ mkToggle (single REFLECTY)
-      $ limitWindows 12
+      $ limitWindows 4
       $ mySpacingCustom 0 8 8 8
       $ mouseResizableTile
     )
@@ -363,44 +365,45 @@ oneBig = renamed [Replace "oneBig"]
     $ buttonDeco shrinkText myTheme ( windowArrange
       $ maximizeWithPadding 16
       $ minimize
-      $ Mag.magnifierOff
+      $ Mag.magnifierczOff' 1.2
       $ mkToggle (single REFLECTX)
       $ mkToggle (single REFLECTY)
       $ mkToggle (single FOLLOW)
-      $ limitWindows 12
+      $ limitWindows 6
       $ mySpacingCustom 0 8 8 8
       $ OneBig (3/4) (3/5)
     )
 accordion = renamed [Replace "accordion"]
+    $ mySpacingCustom 8 0 0 0
     $ minimize
-    $ Mag.magnifierOff
     $ mkToggle (single REFLECTX)
     $ mkToggle (single REFLECTY)
     $ mkToggle (single FOLLOW)
     $ limitWindows 12
     $ mySpacing 12
-    -- $ gaps [(D,72)]
-    $ accordionDefaultResizable shrinkText myTheme
+    $ accordionDefault shrinkText myTheme
 circle = renamed [Replace "circle"]
-    $ minimize
-    $ Mag.magnifierOff
-    $ mkToggle (single REFLECTX)
-    $ mkToggle (single REFLECTY)
-    $ mkToggle (single FOLLOW)
-    $ limitWindows 12
-    $ mySpacing 8
-    -- $ gaps [(D,72)]
-    $ Circle
+    $ mySpacingCustom 8 0 0 0
+    $ buttonDeco shrinkText myTheme ( windowArrange
+      $ minimize
+      $ Mag.magnifierczOff' 1.2
+      $ mkToggle (single REFLECTX)
+      $ mkToggle (single REFLECTY)
+      $ mkToggle (single FOLLOW)
+      $ limitWindows 12
+      $ mySpacing 8
+      $ Circle
+    )
 dishes = renamed [Replace "dishes"]
     $ mySpacingCustom 8 0 0 0
     $ buttonDeco shrinkText myTheme ( windowArrange
       $ maximizeWithPadding 16
       $ minimize
-      $ Mag.magnifierOff
+      $ Mag.magnifierczOff' 1.2
       $ mkToggle (single REFLECTX)
       $ mkToggle (single REFLECTY)
       $ mkToggle (single FOLLOW)
-      $ limitWindows 12
+      $ limitWindows 5
       $ mySpacingCustom 0 8 8 8
       $ Dishes 2 (1/5)
     )
@@ -409,41 +412,41 @@ twoPane = renamed [Replace "twoPane"]
     $ buttonDeco shrinkText myTheme ( windowArrange
       $ maximizeWithPadding 16
       $ minimize
-      $ Mag.magnifierOff
+      $ Mag.magnifierczOff' 1.5
       $ mkToggle (single REFLECTX)
       $ mkToggle (single REFLECTY)
       $ mkToggle (single FOLLOW)
-      $ limitWindows 12
       $ mySpacingCustom 0 8 8 8
-      -- $ gaps [(D,72)]
       $ TwoPanePersistent Nothing (3/100) (1/2)
     )
 roledex = renamed [Replace "roledex"]
-    $ minimize
-    $ Mag.magnifierOff
-    $ mkToggle (single REFLECTX)
-    $ mkToggle (single REFLECTY)
-    $ magicFocus
-    -- $ mkToggle1 MAGICFOCUS
-    $ limitWindows 12
-    $ mySpacing 8
-    -- $ gaps [(D,72)]
-    $ Roledex
+    $ mySpacingCustom 8 0 0 0
+    $ buttonDeco shrinkText myTheme ( windowArrange
+      $ minimize
+      $ Mag.magnifierczOff' 1.5
+      $ mkToggle (single REFLECTX)
+      $ mkToggle (single REFLECTY)
+      $ magicFocus
+      $ limitWindows 12
+      $ mySpacing 8
+      $ Roledex
+    )
 full = renamed [Replace "full"]
-    $ minimize
-    $ Mag.magnifierOff
-    $ mkToggle (single REFLECTX)
-    $ mkToggle (single REFLECTY)
-    $ noBorders
-    $ mySpacing 8
-    -- $ gaps [(D,72)]
-    $ limitWindows 20 Full
+    $ mySpacingCustom 8 0 0 0
+    $ buttonDeco shrinkText myTheme ( windowArrange
+      $ minimize
+      $ mkToggle (single REFLECTX)
+      $ mkToggle (single REFLECTY)
+      $ noBorders
+      $ mySpacing 8
+      $ limitWindows 20 Full
+    )
 floats = renamed [Replace "floats"]
+    $ mySpacingCustom 8 0 0 0
     $ buttonDeco shrinkText myTheme ( windowArrange
       $ maximizeWithPadding 16
       $ maximize
       $ minimize
-      $ Mag.magnifierOff
       $ mkToggle (single REFLECTX)
       $ mkToggle (single REFLECTY)
       $ mkToggle (single FOLLOW)
@@ -456,14 +459,13 @@ grid = renamed [Replace "grid"]
       $ maximizeWithPadding 16
       $ maximize
       $ minimize
-      $ Mag.magnifierOff
+      $ Mag.magnifierczOff' 1.2
       $ mkToggle (single REFLECTX)
       $ mkToggle (single REFLECTY)
       $ mkToggle (single FOLLOW)
       $ limitWindows 12
       $ mySpacingCustom 0 8 8 8
       $ mkToggle (single MIRROR)
-      -- $ Grid (16/10)
       $ GridRatio (4/3) False
     )
 spirals = renamed [Replace "spirals"]
@@ -472,11 +474,11 @@ spirals = renamed [Replace "spirals"]
       $ maximizeWithPadding 16
       $ maximize
       $ minimize
-      $ Mag.magnifierOff
+      $ Mag.magnifierczOff' 1.2
       $ mkToggle (single REFLECTX)
       $ mkToggle (single REFLECTY)
       $ mkToggle (single FOLLOW)
-      $ mySpacingCustom 0 8 8 8
+      $ limitWindows 5
       $ Dwindle.Dwindle Dwindle.R Dwindle.CW 1.5 1.1
     )
 threeCol = renamed [Replace "threeCol"]
@@ -485,7 +487,7 @@ threeCol = renamed [Replace "threeCol"]
       $ maximizeWithPadding 16
       $ maximize
       $ minimize
-      $ Mag.magnifierOff
+      $ Mag.magnifierczOff' 1.2
       $ mkToggle (single REFLECTX)
       $ mkToggle (single REFLECTY)
       $ mkToggle (single FOLLOW)
@@ -499,7 +501,7 @@ threeColMid = renamed [Replace "threeColMid"]
       $ maximizeWithPadding 16
       $ maximize
       $ minimize
-      $ Mag.magnifierOff
+      $ Mag.magnifierczOff' 1.2
       $ mkToggle (single REFLECTX)
       $ mkToggle (single REFLECTY)
       $ mkToggle (single FOLLOW)
@@ -513,7 +515,7 @@ threeRow = renamed [Replace "threeRow"]
       $ maximizeWithPadding 16
       $ maximize
       $ minimize
-      $ Mag.magnifierOff
+      $ Mag.magnifierczOff' 1.2
       $ mkToggle (single REFLECTX)
       $ mkToggle (single REFLECTY)
       $ mkToggle (single FOLLOW)
@@ -525,9 +527,9 @@ threeRow = renamed [Replace "threeRow"]
 tabs = renamed [Replace "tabs"]
     $ noBorders
     $ minimize
-    $ Mag.magnifierOff
     $ mkToggle (single REFLECTX)
     $ mkToggle (single REFLECTY)
+    $ limitWindows 12
     $ gaps [(D,16), (U,16), (L,16), (R,16)]
     $ trackFloating (useTransientFor (tabbed shrinkText (myTheme {
           windowTitleIcons = []
@@ -537,28 +539,19 @@ tabs = renamed [Replace "tabs"]
 
 myBaseLayout = screenCornerLayoutHook
     $ mouseResize
-    -- $ magicFocus
     $ boringWindows
     $ refocusLastLayoutHook
     $ T.toggleLayouts roledex
-    $ T.toggleLayouts floats
-    $ mkToggle (NBFULL ?? NOBORDERS ?? EOT)
+    $ mkToggle (NBFULL ?? NOBORDERS ?? FULL ?? EOT)
     $ onWorkspace (myWorkspaces !! 0) webLayouts
     $ onWorkspace (myWorkspaces !! 1) codeLayouts
     $ onWorkspace (myWorkspaces !! 2) chatLayouts
-    $ onWorkspace (myWorkspaces !! 5) youtubeLayouts
-    $ onWorkspace (myWorkspaces !! 8) settingsLayouts
     $ allLayouts
   where
-    allLayouts = tall ||| full ||| twoPane ||| threeColMid ||| oneBig ||| dishes ||| grid
-    webLayouts = oneBig ||| threeColMid ||| dishes ||| tall
-      -- ||| floats
-      -- ||| grid
-      -- ||| spirals
+    allLayouts = tall ||| threeColMid ||| dishes ||| oneBig ||| grid ||| twoPane ||| spirals ||| circle ||| floats ||| tabs
+    webLayouts = oneBig ||| threeColMid ||| dishes ||| tall ||| grid ||| twoPane ||| spirals ||| circle ||| floats ||| tabs
     codeLayouts = tabs ||| twoPane ||| dishes
-    chatLayouts = grid ||| threeColMid ||| tall
-    youtubeLayouts = oneBig ||| full
-    settingsLayouts = circle ||| grid ||| spirals ||| floats
+    chatLayouts = grid ||| threeColMid ||| dishes ||| oneBig ||| tall ||| twoPane ||| spirals ||| circle ||| floats ||| tabs
 
 data FocusedOnly = FocusedOnly
   deriving (Show, Read)
@@ -669,6 +662,7 @@ myLayoutImages = [
     ("tabs", "tab"),
     ("full", "full"),
 
+    ("accordion", "accordion"),
     ("circle", "circle"),
     ("grid", "grid"),
     ("spirals", "dwindle"),
@@ -725,12 +719,15 @@ windowCount = gets $ Just . show . length . W.integrate' . W.stack . W.workspace
 isToggleActiveInCurrent :: Transformer t Window => t -> X (Maybe Bool)
 isToggleActiveInCurrent t = withWindowSet (isToggleActive t . W.workspace . W.current)
 
+isFocusedLayout a = (isSuffixOf "roledex" a) || (isSuffixOf "accordion" a)
+isLayoutRoledex = fmap isFocusedLayout $ gets (description . W.layout . W.workspace . W.current . windowset)
+
 myEventHook e = do
   screenCornerEventHook e
   floatClickFocusHandler e
   multiScreenFocusHook e
   refocusLastWhen isFloat e
-  -- followOnlyIf (May.fromMaybe False <$> isToggleActiveInCurrent FOLLOW) e
+  followOnlyIf (fmap not isLayoutRoledex) e
 
 mySort = getSortByXineramaRule
 
@@ -764,8 +761,8 @@ multiScreenFocusHook _ = return (All True)
 floatClickFocusHandler :: Event -> X All
 floatClickFocusHandler ButtonEvent { ev_window = w } = do
         withWindowSet $ \s -> do
-                if isFloat w s
-                   then (focus w >> promote)
+                if ((isFloat w s))
+                   then (focus w >> dwmpromote)
                    else return ()
                 return (All True)
                 where isFloat w ss = M.member w $ W.floating ss

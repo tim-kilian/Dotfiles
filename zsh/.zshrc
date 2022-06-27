@@ -51,5 +51,9 @@ export QT_QPA_PLATFORMTHEME=qt5ct
 export QT_STYLE_OVERRIDE=kvantum
 export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
 
+TRAPWINCH () {
+  BAR=$(printf '=%.0s' {1..$COLUMNS})
+}
 
+#[ -f "/home/tkilian/.ghcup/env" ] && source "/home/tkilian/.ghcup/env" # ghcup-env
 [ -f "/home/tkilian/.ghcup/env" ] && source "/home/tkilian/.ghcup/env" # ghcup-env
