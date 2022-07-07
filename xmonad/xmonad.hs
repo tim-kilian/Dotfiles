@@ -349,30 +349,30 @@ instance Eq a => DecorationStyle ButtonDecoration a where
 
 tall = renamed [Replace "tall"]
     $ mySpacingCustom 8 0 0 0
-    $ buttonDeco shrinkText myTheme ( windowArrange
-      $ maximizeWithPadding 16
-      $ maximize
-      $ minimize
-      $ Mag.magnifierczOff' 1.2
-      $ mkToggle (single REFLECTX)
-      $ mkToggle (single REFLECTY)
-      $ limitWindows 4
-      $ mySpacingCustom 0 8 8 8
-      $ mouseResizableTile
-    )
+    $ buttonDeco shrinkText myTheme
+    $ windowArrange
+    $ maximizeWithPadding 16
+    $ maximize
+    $ minimize
+    $ Mag.magnifierczOff' 1.2
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
+    $ limitWindows 4
+    $ mySpacingCustom 0 8 8 8
+    $ mouseResizableTile
 oneBig = renamed [Replace "oneBig"]
     $ mySpacingCustom 8 0 0 0
-    $ buttonDeco shrinkText myTheme ( windowArrange
-      $ maximizeWithPadding 16
-      $ minimize
-      $ Mag.magnifierczOff' 1.2
-      $ mkToggle (single REFLECTX)
-      $ mkToggle (single REFLECTY)
-      $ mkToggle (single FOLLOW)
-      $ limitWindows 6
-      $ mySpacingCustom 0 8 8 8
-      $ OneBig (3/4) (3/5)
-    )
+    $ buttonDeco shrinkText myTheme
+    $ windowArrange
+    $ maximizeWithPadding 16
+    $ minimize
+    $ Mag.magnifierczOff' 1.2
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
+    $ mkToggle (single FOLLOW)
+    $ limitWindows 6
+    $ mySpacingCustom 0 8 8 8
+    $ OneBig (3/4) (3/5)
 accordion = renamed [Replace "accordion"]
     $ mySpacingCustom 8 0 0 0
     $ minimize
@@ -384,146 +384,147 @@ accordion = renamed [Replace "accordion"]
     $ accordionDefault shrinkText myTheme
 circle = renamed [Replace "circle"]
     $ mySpacingCustom 8 0 0 0
-    $ buttonDeco shrinkText myTheme ( windowArrange
-      $ minimize
-      $ Mag.magnifierczOff' 1.2
-      $ mkToggle (single REFLECTX)
-      $ mkToggle (single REFLECTY)
-      $ mkToggle (single FOLLOW)
-      $ limitWindows 12
-      $ mySpacing 8
-      $ Circle
-    )
+    $ buttonDeco shrinkText myTheme
+    $ windowArrange
+    $ minimize
+    $ Mag.magnifierczOff' 1.2
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
+    $ mkToggle (single FOLLOW)
+    $ limitWindows 12
+    $ mySpacing 8
+    $ Circle
 dishes = renamed [Replace "dishes"]
     $ mySpacingCustom 8 0 0 0
-    $ buttonDeco shrinkText myTheme ( windowArrange
-      $ maximizeWithPadding 16
-      $ minimize
-      $ Mag.magnifierczOff' 1.2
-      $ mkToggle (single REFLECTX)
-      $ mkToggle (single REFLECTY)
-      $ mkToggle (single FOLLOW)
-      $ limitWindows 5
-      $ mySpacingCustom 0 8 8 8
-      $ Dishes 2 (1/5)
-    )
+    $ buttonDeco shrinkText myTheme
+    $ windowArrange
+    $ maximizeWithPadding 16
+    $ minimize
+    $ Mag.magnifierczOff' 1.2
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
+    $ mkToggle (single FOLLOW)
+    $ limitWindows 5
+    $ mySpacingCustom 0 8 8 8
+    $ Dishes 2 (1/5)
 twoPane = renamed [Replace "twoPane"]
     $ mySpacingCustom 8 0 0 0
-    $ buttonDeco shrinkText myTheme ( windowArrange
-      $ maximizeWithPadding 16
-      $ minimize
-      $ Mag.magnifierczOff' 1.5
-      $ mkToggle (single REFLECTX)
-      $ mkToggle (single REFLECTY)
-      $ mkToggle (single FOLLOW)
-      $ mySpacingCustom 0 8 8 8
-      $ TwoPanePersistent Nothing (3/100) (1/2)
-    )
+    $ buttonDeco shrinkText myTheme
+    $ windowArrange
+    $ maximizeWithPadding 16
+    $ minimize
+    $ Mag.magnifierczOff' 1.5
+    $ mySpacingCustom 8 0 0 0
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
+    $ mkToggle (single FOLLOW)
+    $ TwoPanePersistent Nothing (3/100) (1/2)
 roledex = renamed [Replace "roledex"]
     $ mySpacingCustom 8 0 0 0
-    $ buttonDeco shrinkText myTheme ( windowArrange
-      $ minimize
-      $ Mag.magnifierczOff' 1.5
-      $ mkToggle (single REFLECTX)
-      $ mkToggle (single REFLECTY)
-      $ magicFocus
-      $ limitWindows 12
-      $ mySpacing 8
-      $ Roledex
-    )
+    $ buttonDeco shrinkText myTheme
+    $ windowArrange
+    $ minimize
+    $ Mag.magnifierczOff' 1.5
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
+    $ magicFocus
+    $ limitWindows 12
+    $ mySpacing 8
+    $ Roledex
 full = renamed [Replace "full"]
     $ mySpacingCustom 8 0 0 0
-    $ buttonDeco shrinkText myTheme ( windowArrange
-      $ minimize
-      $ mkToggle (single REFLECTX)
-      $ mkToggle (single REFLECTY)
-      $ noBorders
-      $ mySpacing 8
-      $ limitWindows 20 Full
-    )
+    $ buttonDeco shrinkText myTheme
+    $ windowArrange
+    $ minimize
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
+    $ noBorders
+    $ trackFloating
+    $ useTransientFor
+    $ limitWindows 20 Full
 floats = renamed [Replace "floats"]
     $ mySpacingCustom 8 0 0 0
-    $ buttonDeco shrinkText myTheme ( windowArrange
-      $ maximizeWithPadding 16
-      $ maximize
-      $ minimize
-      $ mkToggle (single REFLECTX)
-      $ mkToggle (single REFLECTY)
-      $ mkToggle (single FOLLOW)
-      $ limitWindows 20
-      $ simplestFloat
-    )
+    $ buttonDeco shrinkText myTheme
+    $ windowArrange
+    $ maximizeWithPadding 16
+    $ maximize
+    $ minimize
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
+    $ mkToggle (single FOLLOW)
+    $ limitWindows 20
+    $ simplestFloat
 grid = renamed [Replace "grid"]
     $ mySpacingCustom 8 0 0 0
-    $ buttonDeco shrinkText myTheme ( windowArrange
-      $ maximizeWithPadding 16
-      $ maximize
-      $ minimize
-      $ Mag.magnifierczOff' 1.2
-      $ mkToggle (single REFLECTX)
-      $ mkToggle (single REFLECTY)
-      $ mkToggle (single FOLLOW)
-      $ limitWindows 12
-      $ mySpacingCustom 0 8 8 8
-      $ mkToggle (single MIRROR)
-      $ GridRatio (4/3) False
-    )
+    $ buttonDeco shrinkText myTheme
+    $ windowArrange
+    $ maximizeWithPadding 16
+    $ maximize
+    $ minimize
+    $ Mag.magnifierczOff' 1.2
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
+    $ mkToggle (single FOLLOW)
+    $ limitWindows 12
+    $ mySpacingCustom 0 8 8 8
+    $ mkToggle (single MIRROR)
+    $ GridRatio (4/3) False
 spirals = renamed [Replace "spirals"]
     $ mySpacingCustom 8 0 0 0
-    $ buttonDeco shrinkText myTheme ( windowArrange
-      $ maximizeWithPadding 16
-      $ maximize
-      $ minimize
-      $ Mag.magnifierczOff' 1.2
-      $ mkToggle (single REFLECTX)
-      $ mkToggle (single REFLECTY)
-      $ mkToggle (single FOLLOW)
-      $ limitWindows 5
-      $ Dwindle.Dwindle Dwindle.R Dwindle.CW 1.5 1.1
-    )
+    $ buttonDeco shrinkText myTheme
+    $ windowArrange
+    $ maximizeWithPadding 16
+    $ maximize
+    $ minimize
+    $ Mag.magnifierczOff' 1.2
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
+    $ mkToggle (single FOLLOW)
+    $ limitWindows 5
+    $ Dwindle.Dwindle Dwindle.R Dwindle.CW 1.5 1.1
 threeCol = renamed [Replace "threeCol"]
     $ mySpacingCustom 8 0 0 0
-    $ buttonDeco shrinkText myTheme ( windowArrange
-      $ maximizeWithPadding 16
-      $ maximize
-      $ minimize
-      $ Mag.magnifierczOff' 1.2
-      $ mkToggle (single REFLECTX)
-      $ mkToggle (single REFLECTY)
-      $ mkToggle (single FOLLOW)
-      $ limitWindows 7
-      $ mySpacingCustom 0 8 8 8
-      $ ThreeCol 1 (3/100) (1/2)
-    )
+    $ buttonDeco shrinkText myTheme
+    $ windowArrange
+    $ maximizeWithPadding 16
+    $ maximize
+    $ minimize
+    $ Mag.magnifierczOff' 1.2
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
+    $ mkToggle (single FOLLOW)
+    $ limitWindows 7
+    $ mySpacingCustom 0 8 8 8
+    $ ThreeCol 1 (3/100) (1/2)
 threeColMid = renamed [Replace "threeColMid"]
     $ mySpacingCustom 8 0 0 0
-    $ buttonDeco shrinkText myTheme ( windowArrange
-      $ maximizeWithPadding 16
-      $ maximize
-      $ minimize
-      $ Mag.magnifierczOff' 1.2
-      $ mkToggle (single REFLECTX)
-      $ mkToggle (single REFLECTY)
-      $ mkToggle (single FOLLOW)
-      $ limitWindows 7
-      $ mySpacingCustom 0 8 8 8
-      $ ThreeColMid 1 (3/100) (1/2)
-    )
+    $ buttonDeco shrinkText myTheme
+    $ windowArrange
+    $ maximizeWithPadding 16
+    $ maximize
+    $ minimize
+    $ Mag.magnifierczOff' 1.2
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
+    $ mkToggle (single FOLLOW)
+    $ limitWindows 7
+    $ mySpacingCustom 0 8 8 8
+    $ ThreeColMid 1 (3/100) (1/2)
 threeRow = renamed [Replace "threeRow"]
     $ mySpacingCustom 8 0 0 0
-    $ buttonDeco shrinkText myTheme ( windowArrange
-      $ maximizeWithPadding 16
-      $ maximize
-      $ minimize
-      $ Mag.magnifierczOff' 1.2
-      $ mkToggle (single REFLECTX)
-      $ mkToggle (single REFLECTY)
-      $ mkToggle (single FOLLOW)
-      $ limitWindows 7
-      $ mySpacingCustom 0 8 8 8
-      $ Mirror
-      $ ThreeCol 1 (3/100) (1/2)
-    )
+    $ buttonDeco shrinkText myTheme
+    $ windowArrange
+    $ maximizeWithPadding 16
+    $ maximize
+    $ minimize
+    $ Mag.magnifierczOff' 1.2
+    $ mkToggle (single REFLECTX)
+    $ mkToggle (single REFLECTY)
+    $ mkToggle (single FOLLOW)
+    $ limitWindows 7
+    $ mySpacingCustom 0 8 8 8
+    $ Mirror
+    $ ThreeCol 1 (3/100) (1/2)
 tabs = renamed [Replace "tabs"]
     $ noBorders
     $ minimize
@@ -531,13 +532,18 @@ tabs = renamed [Replace "tabs"]
     $ mkToggle (single REFLECTY)
     $ limitWindows 12
     $ gaps [(D,16), (U,16), (L,16), (R,16)]
-    $ trackFloating (useTransientFor (tabbed shrinkText (myTheme {
+    $ trackFloating
+    $ useTransientFor
+    $ tabbed shrinkText (myTheme {
           windowTitleIcons = []
           -- activeColor = "#3e445e",
           -- inactiveColor = "#292d3e"
-        })))
+        })
 
 myBaseLayout = screenCornerLayoutHook
+    $ smartBorders
+    $ lessBorders FocusedOnly
+    $ avoidStruts
     $ mouseResize
     $ boringWindows
     $ refocusLastLayoutHook
@@ -762,7 +768,7 @@ floatClickFocusHandler :: Event -> X All
 floatClickFocusHandler ButtonEvent { ev_window = w } = do
         withWindowSet $ \s -> do
                 if ((isFloat w s))
-                   then (focus w >> dwmpromote)
+                   then (focus w >> promote)
                    else return ()
                 return (All True)
                 where isFloat w ss = M.member w $ W.floating ss
@@ -814,7 +820,7 @@ main = do
       -- mouseBindings = myMouseBindings,
 
       startupHook = myStartupHook,
-      layoutHook =  smartBorders (lessBorders FocusedOnly (avoidStruts myBaseLayout)),
+      layoutHook = myBaseLayout,
       manageHook = manageDocks <+> myHooks,
       handleEventHook = myEventHook,
       logHook = myLogHook xmproc0 -- xmproc1 xmproc2

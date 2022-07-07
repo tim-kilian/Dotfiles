@@ -3,7 +3,7 @@ static char *wide[] = {
 /* columns rows colors chars-per-pixel */
 "20 420 2 1 ",
 "  c None",
-". c white",
+". c #dfdfdf",
 /* pixels */
 "....................",
 ".        ..   ..   .",

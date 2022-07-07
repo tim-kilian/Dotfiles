@@ -2,7 +2,7 @@
 static char * accordion_xpm[] = {
 "20 20 2 1",
 " 	c None",
-".	c #FFFFFF",
+".	c #dfdfdf",
 "....................",
 ".                  .",
 "....................",
