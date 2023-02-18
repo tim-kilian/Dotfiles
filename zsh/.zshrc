@@ -1,3 +1,5 @@
+zmodload zsh/zprof
+
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
@@ -39,7 +41,7 @@ export EDITOR='vim'
 source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
 
 alias ls='lsd'
-alias reds="redshift-gtk -l $(curl -s https://location.services.mozilla.com/v1/geolocate\?key=geoclue | jq '.location.lat, .location.lng' | tr '\n' ':' | sed 's/:$//')"
+#alias reds="redshift-gtk -l $(curl -s https://location.services.mozilla.com/v1/geolocate\?key=geoclue | jq '.location.lat, .location.lng' | tr '\n' ':' | sed 's/:$//')"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
@@ -57,3 +59,30 @@ TRAPWINCH () {
 
 #[ -f "/home/tkilian/.ghcup/env" ] && source "/home/tkilian/.ghcup/env" # ghcup-env
 [ -f "/home/tkilian/.ghcup/env" ] && source "/home/tkilian/.ghcup/env" # ghcup-env
+
+timezsh() {
+  shell=${1-$SHELL}
+  for i in $(seq 1 10); do time $shell -i -c exit; done
+}
+
+timeplugins() {
+
+  for plugin ($plugins); do
+    timer=$(python -c 'from time import time; print(int(round(time() * 1000)))')
+    if [ -f $ZSH_CUSTOM/plugins/$plugin/$plugin.plugin.zsh ]; then
+      source $ZSH_CUSTOM/plugins/$plugin/$plugin.plugin.zsh
+    elif [ -f $ZSH/plugins/$plugin/$plugin.plugin.zsh ]; then
+      source $ZSH/plugins/$plugin/$plugin.plugin.zsh
+    fi
+    now=$(python -c 'from time import time; print(int(round(time() * 1000)))')
+    elapsed=$(($now-$timer))
+    echo $elapsed":" $plugin
+  done
+}
+
+
+
+#typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
+#neofetch
+
+[[ $commands[kubectl] ]] && source <(kubectl completion zsh)

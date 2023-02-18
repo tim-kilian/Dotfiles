@@ -222,35 +222,37 @@ myScratchpads = [
 
 myStartupHook = do
   --spawn "killall conky"
-  spawn "killall lxsession"
-  spawn "killall deadd-notification-center"
-  spawn "killall trayer"
-  spawn "killall cbatticon"
-  spawn "killall clipit"
-  spawn "killall volctl"
-  spawn "lxsession"
-  spawn "clipit -d"
-  spawn "xlayoutdisplay -d 108"
-  spawn "picom"
-  spawn "deadd-notification-center"
-  setWMName "LG3D"
-  spawn "nitrogen --restore"
+  --spawn "killall lxsession"
+  --spawn "killall deadd-notification-center"
+  --spawn "killall trayer"
+  --spawn "killall cbatticon"
+  --spawn "killall clipit"
+  --spawn "killall volctl"
+  --spawn "killall aw-qt"
+  --spawn "lxsession"
+  --spawn "clipit -d"
+  --spawn "xlayoutdisplay -d 108"
+  --spawn "picom"
+  --spawn "deadd-notification-center"
+  --setWMName "LG3D"
+  --spawn "nitrogen --restore"
   --spawn "xmodmap -layout de -variant dvp -option caps:swapescape -option lv3:ralt_switch "
   spawn "xmodmap ~/.xmodmap-`uname -n`"
   -- spawn "tint2"
-  spawn "volctl"
-  spawn "cbatticon"
+  --spawn "/opt/activitywatch/aw-qt"
+  --spawn "volctl"
+  --spawn "cbatticon"
   spawn "trayer --tint 0x20222a --alpha 0 --transparent true --expand true --SetDockType true --iconspacing 3 --margin 16 --widthtype pixel --distance 16 --width 250 --height 30 --padding 8 --edge top --align right"
-  spawn "onboard"
+  --spawn "onboard"
   spawn "xinput set-prop \"SynPS/2 Synaptics TouchPad\" \"libinput Tapping Enabled\" 1"
   spawn "xinput set-prop \"SynPS/2 Synaptics TouchPad\" \"libinput Natural Scrolling Enabled\" 1"
   spawn "gsettings set org.cinnamon.desktop.default-applications.terminal exec tilix"
-  spawn "plank"
-  spawn "dunst"
+  --spawn "plank"
+  --spawn "dunst"
   --spawn "sleep 2 && trayer --edge top --align right --widthtype request --padding 6 --margin 410 --SetDockType true --SetPartialStrut true --expand true --monitor 0 --transparent true --alpha 0 --tint #424242 --height 24"
   --spawn "sleep 2 && conky -c ~/.conkyrc"
   --spawn "alttab -w 1 --theme -fg '#d58681' -bg '#4a4a4a' -frame '#eb564d' -t 128x150 -i 127x64"
-  addScreenCorner SCLowerLeft (spawn "killall plank && plank")
+  --addScreenCorner SCLowerLeft (spawn "killall plank && plank")
 
 mySpacing i = spacingRaw False (Border 0 i i i) True (Border 0 i i i) True
 mySpacingCustom bottom top left right = spacingRaw False (Border bottom top left right) True (Border bottom top left right) True
@@ -409,16 +411,16 @@ dishes = renamed [Replace "dishes"]
     $ Dishes 2 (1/5)
 twoPane = renamed [Replace "twoPane"]
     $ mySpacingCustom 8 0 0 0
-    $ buttonDeco shrinkText myTheme
-    $ windowArrange
-    $ maximizeWithPadding 16
-    $ minimize
-    $ Mag.magnifierczOff' 1.5
-    $ mySpacingCustom 8 0 0 0
-    $ mkToggle (single REFLECTX)
-    $ mkToggle (single REFLECTY)
-    $ mkToggle (single FOLLOW)
-    $ TwoPanePersistent Nothing (3/100) (1/2)
+    $ buttonDeco shrinkText myTheme ( windowArrange
+      $ maximizeWithPadding 16
+      $ minimize
+      $ Mag.magnifierczOff' 1.5
+      $ mySpacingCustom 0 8 8 8
+      $ mkToggle (single REFLECTX)
+      $ mkToggle (single REFLECTY)
+      $ mkToggle (single FOLLOW)
+      $ TwoPanePersistent Nothing (3/100) (1/2)
+    )
 roledex = renamed [Replace "roledex"]
     $ mySpacingCustom 8 0 0 0
     $ buttonDeco shrinkText myTheme
@@ -471,17 +473,18 @@ grid = renamed [Replace "grid"]
     $ GridRatio (4/3) False
 spirals = renamed [Replace "spirals"]
     $ mySpacingCustom 8 0 0 0
-    $ buttonDeco shrinkText myTheme
-    $ windowArrange
-    $ maximizeWithPadding 16
-    $ maximize
-    $ minimize
-    $ Mag.magnifierczOff' 1.2
-    $ mkToggle (single REFLECTX)
-    $ mkToggle (single REFLECTY)
-    $ mkToggle (single FOLLOW)
-    $ limitWindows 5
-    $ Dwindle.Dwindle Dwindle.R Dwindle.CW 1.5 1.1
+    $ buttonDeco shrinkText myTheme ( windowArrange
+      $ maximizeWithPadding 16
+      $ maximize
+      $ minimize
+      $ Mag.magnifierczOff' 1.2
+      $ mkToggle (single REFLECTX)
+      $ mkToggle (single REFLECTY)
+      $ mkToggle (single FOLLOW)
+      $ mySpacingCustom 0 8 8 8
+      $ limitWindows 5
+      $ Dwindle.Dwindle Dwindle.R Dwindle.CW 1.5 1.1
+    )
 threeCol = renamed [Replace "threeCol"]
     $ mySpacingCustom 8 0 0 0
     $ buttonDeco shrinkText myTheme
